@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { ClosingCta } from '@/components/ClosingCta';
+import { FaqJsonLd, OrganizationJsonLd, WebSiteJsonLd } from '@/components/JsonLd';
 import { ComparisonWidget } from '@/components/ComparisonWidget';
 import { CoverageStats } from '@/components/CoverageStats';
 import { DeveloperSection } from '@/components/DeveloperSection';
-import { Faq } from '@/components/Faq';
+import { Faq, FAQ_QUESTIONS } from '@/components/Faq';
 import { HowItWorks } from '@/components/HowItWorks';
 import { ProviderWall } from '@/components/ProviderWall';
 import { ButtonLink, Pill } from '@/components/ui/Button';
@@ -36,6 +37,10 @@ export default function HomePage() {
 
   return (
     <>
+      <OrganizationJsonLd />
+      <WebSiteJsonLd />
+      <FaqJsonLd questions={FAQ_QUESTIONS} />
+
       {/*
         Sections alternate page-lavender and white the whole way down, and the
         brand blue appears once at the bottom. That is onramper.com's colour
