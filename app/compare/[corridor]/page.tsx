@@ -1,13 +1,13 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ComparisonWidget } from '@/components/ComparisonWidget';
 import { DisclosureNotice } from '@/components/DisclosureNotice';
 import { Faq, FAQ_QUESTIONS } from '@/components/Faq';
 import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/JsonLd';
-import { CorridorUnsupported } from '@/components/states/CorridorUnsupported';
 import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
-import { CORRIDORS, getCorridor, nearestCorridor } from '@/lib/corridors';
+import { CORRIDORS, getCorridor } from '@/lib/corridors';
 import { corridorNote } from '@/lib/corridorNotes';
 import { corridorInsight, corridorSummary } from '@/lib/corridorInsight';
 import { formatBps, formatMoney, formatPaymentMethods } from '@/lib/format';
@@ -17,7 +17,16 @@ export function generateStaticParams() {
   return CORRIDORS.map((corridor) => ({ corridor: corridor.slug }));
 }
 
-export const dynamicParams = true;
+/**
+ * The corridor set is closed and fully enumerated by generateStaticParams, so
+ * anything outside it is a 404 that Next answers without rendering the page.
+ *
+ * With dynamicParams enabled, a notFound() here was being cached and
+ * persisted as a prerendered page — /compare/aaa-bbb was written to disk and
+ * served with a 200. Every invented corridor URL would have become an
+ * indexable soft 404.
+ */
+export const dynamicParams = false;
 
 type Params = { params: Promise<{ corridor: string }> };
 
@@ -45,13 +54,9 @@ export default async function CorridorPage({ params }: Params) {
   const { corridor: slug } = await params;
   const corridor = getCorridor(slug);
 
-  if (!corridor) {
-    return (
-      <div className="mx-auto max-w-page px-5 py-20 sm:px-6">
-        <CorridorUnsupported requested={slug} nearest={nearestCorridor(slug)} />
-      </div>
-    );
-  }
+  // Unreachable while dynamicParams is false; kept so the type narrows and
+  // so re-enabling dynamic params cannot silently render a broken page.
+  if (!corridor) notFound();
 
   const insight = corridorInsight(corridor);
   const others = CORRIDORS.filter((c) => c.slug !== corridor.slug);
