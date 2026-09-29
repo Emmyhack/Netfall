@@ -1,25 +1,32 @@
 import type { Metadata, Viewport } from 'next';
 import { fontVariables } from './fonts';
 import { themeBootstrapScript } from '@/lib/theme';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/site';
 import { SiteHeader } from '@/components/SiteHeader';
 import { SiteFooter } from '@/components/SiteFooter';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://netfall.io'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Netfall — see what actually lands',
-    template: '%s · Netfall',
+    default: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`,
+    template: `%s · ${SITE_NAME}`,
   },
-  description:
-    'Compare stablecoin conversion rates across providers by the one figure that matters: how much actually arrives. NGN, GHS and KES to USDT and USDC.',
-  applicationName: 'Netfall',
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    siteName: 'Netfall',
-    title: 'Netfall — see what actually lands',
+    siteName: SITE_NAME,
+    url: SITE_URL,
+    title: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`,
     description:
       'Providers advertise numbers you cannot compare. Netfall resolves them to the final arriving amount.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`,
+    description: SITE_DESCRIPTION,
   },
   robots: { index: true, follow: true },
 };

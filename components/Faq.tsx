@@ -1,6 +1,6 @@
 import { Section, SectionHeading, type SectionTone } from './ui/Section';
 
-const QUESTIONS: readonly { q: string; a: string }[] = [
+export const FAQ_QUESTIONS: readonly { q: string; a: string }[] = [
   {
     q: 'Does Netfall ever hold my money?',
     a: 'No. Netfall never holds funds, never executes a transaction and never takes custody. We compare what providers offer and link you to the one you choose. The transfer happens entirely between you and them.',
@@ -48,7 +48,7 @@ export function Faq({ tone = 'paper' }: { tone?: SectionTone }) {
         />
 
         <dl className="divide-y divide-rule border-y border-rule">
-          {QUESTIONS.map((item) => (
+          {FAQ_QUESTIONS.map((item) => (
             <div key={item.q} className="py-8">
               <dt className="text-2xl text-ink">{item.q}</dt>
               <dd className="mt-4 max-w-content text-lg text-ink-2">{item.a}</dd>

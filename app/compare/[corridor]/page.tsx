@@ -2,7 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ComparisonWidget } from '@/components/ComparisonWidget';
 import { DisclosureNotice } from '@/components/DisclosureNotice';
-import { Faq } from '@/components/Faq';
+import { Faq, FAQ_QUESTIONS } from '@/components/Faq';
+import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/JsonLd';
 import { CorridorUnsupported } from '@/components/states/CorridorUnsupported';
 import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
@@ -57,6 +58,15 @@ export default async function CorridorPage({ params }: Params) {
 
   return (
     <>
+      <BreadcrumbJsonLd
+        trail={[
+          { name: 'Netfall', path: '/' },
+          { name: 'Compare', path: '/compare' },
+          { name: `${corridor.from} to ${corridor.to}`, path: `/compare/${corridor.slug}` },
+        ]}
+      />
+      <FaqJsonLd questions={FAQ_QUESTIONS} />
+
       <ComparisonWidget
         corridorFromPath={corridor}
         mode="path"
