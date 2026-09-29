@@ -11,6 +11,7 @@ import { ApproximationSign, ConfidenceMarker } from './ConfidenceMarker';
 import { CorridorSelector } from './CorridorSelector';
 import { QuoteTable } from './QuoteTable';
 import { SpreadBar } from './SpreadBar';
+import { SpreadBarPanel } from './SpreadBarPanel';
 
 /** Only reached above a corridor's OTC threshold, so it is split out. */
 const HighTicketInterceptor = dynamic(
@@ -136,6 +137,17 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
         </div>
       </section>
 
+      {!overThreshold && (
+        <SpreadBarPanel
+          quotes={quotes.quotes}
+          corridor={corridor}
+          inputAmount={amount ?? corridor.defaultAmount}
+          dispersionBps={quotes.dispersionBps}
+          settled={quotes.status === 'settled'}
+          expectedProviders={corridor.providers.length}
+        />
+      )}
+
       <div id="results" className="sec-white">
         <div className="mx-auto max-w-page px-5 py-20 sm:px-8">
         {overThreshold && amount !== null ? (
@@ -145,7 +157,7 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
             state={quotes}
             corridor={corridor}
             inputAmount={amount ?? corridor.defaultAmount}
-            showSpreadBar={false}
+            showSpreadBar
             expectedProviders={corridor.providers.length}
           />
         )}
