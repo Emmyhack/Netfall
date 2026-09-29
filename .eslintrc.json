@@ -1,0 +1,46 @@
+{
+  "extends": [
+    "next/core-web-vitals"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Number",
+        "property": "parseFloat",
+        "message": "Monetary values are decimal strings. Use lib/money.ts."
+      }
+    ],
+    "no-restricted-globals": [
+      "error",
+      {
+        "name": "parseFloat",
+        "message": "Monetary values are decimal strings. Use lib/money.ts."
+      }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.property.name='toLocaleString']",
+        "message": "All monetary and numeric formatting lives in lib/format.ts."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "lib/format.ts",
+        "lib/money.ts"
+      ],
+      "rules": {
+        "no-restricted-syntax": "off",
+        "no-restricted-globals": "off"
+      }
+    }
+  ],
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "parser": "@typescript-eslint/parser"
+}

@@ -1,0 +1,484 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Netfall design tokens.
+
+   Colour branding: Onramper, sampled from the live site.
+     page #EFEEF3 · cards #FFFFFF · ink #151515 · body #333333 · muted #6A6A84
+     borders #CACAD4 · brand blue #0093FF · dark #151515
+     accents mint #6AFFC5, cyan #63D2E6, electric #1F00FF
+     radii 8px standard, 16-24px cards, 123px pills
+
+   Design pattern: MetaMask. Consecutive full-bleed sections, each a different
+   flat brand colour, with the type inverted against whatever ground it sits
+   on; one very large display line; every action a pill.
+
+   Two measured constraints shaped the result. White on #0093FF is 3.17:1, so
+   the brand band carries dark type rather than white. Onramper's palette has
+   no warm colour at all, so the caution tone is the one addition — it has to
+   be distinguishable from brand blue to mean anything.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* surfaces */
+  --paper: #efeef3;
+  --surface: #ffffff;
+  --surface-2: #e6e5ee;
+  --paper-2: #f5f5f7;
+
+  /* ink */
+  --ink: #151515;
+  --ink-2: #333333;
+  --ink-3: #65657e; /* Onramper #6A6A84, darkened to clear AA on --surface-2 */
+
+  /* structure */
+  --rule: #cacad4;
+  --rule-2: #a9a9bc;
+
+  /* brand */
+  --brand: #0093ff;
+  --mint: #6affc5;
+  --cyan: #63d2e6;
+  /* Type on the brand fills. Fixed in both themes, because the fills are. */
+  --on-brand: #151515;
+  --on-mint: #151515;
+
+  /* bands: flat full-bleed grounds, MetaMask's device in Onramper's colours */
+  --band-dark-bg: #151515;
+  --band-dark-ink: #efeef3;
+  --band-dark-ink-2: #b6b6c2;
+  --band-dark-rule: #33333a;
+  --band-dark-surface: #1e1e20;
+
+  /* signal */
+  --best: #007648;
+  --best-soft: #dffbef;
+  --caution: #9c550b;
+  --caution-soft: #fbeedb;
+  --absent: #65657e;
+
+  /* focus */
+  --focus: #1f00ff;
+
+  /* shape */
+  --radius-pill: 123px;
+  --radius-card: 16px;
+  --radius-sm: 8px;
+
+  /*
+   * Type, measured off onramper.com: h1 and h2 are both 90px / 500 / 1.0 /
+   * -1.8px, and the standfirst under them is 24px #929292. Section headings
+   * are the same size as the hero there — that is most of why the page reads
+   * the way it does.
+   */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-lead: clamp(1.125rem, 0.95rem + 0.7vw, 1.5rem); /* 24px standfirst */
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: clamp(2rem, 1.3rem + 2.8vw, 3rem);
+  --text-display: clamp(2.5rem, 1rem + 6vw, 5.625rem); /* 90px */
+
+  /* layout */
+  --measure-content: 60ch;
+  --measure-page: 1300px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #151515;
+    --surface: #1e1e20;
+    --surface-2: #2a2a2e;
+    --paper-2: #24242a;
+
+    --ink: #efeef3;
+    --ink-2: #b6b6c2;
+    --ink-3: #92929f;
+
+    --rule: #33333a;
+    --rule-2: #4a4a55;
+
+    --brand: #0093ff;
+    --mint: #6affc5;
+    --cyan: #63d2e6;
+    --on-brand: #151515;
+    --on-mint: #151515;
+
+    /* On a dark page the dark band inverts to light, the way MetaMask
+       alternates grounds down the page. */
+    --band-dark-bg: #efeef3;
+    --band-dark-ink: #151515;
+    --band-dark-ink-2: #4a4a55;
+    --band-dark-rule: #cacad4;
+    --band-dark-surface: #ffffff;
+
+    --best: #6affc5;
+    --best-soft: #0a2a1e;
+    --caution: #e5a34a;
+    --caution-soft: #2e2312;
+    --absent: #92929f;
+
+    --focus: #8fb6ff;
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #151515;
+  --surface: #1e1e20;
+  --surface-2: #2a2a2e;
+  --paper-2: #24242a;
+
+  --ink: #efeef3;
+  --ink-2: #b6b6c2;
+  --ink-3: #92929f;
+
+  --rule: #33333a;
+  --rule-2: #4a4a55;
+
+  --brand: #0093ff;
+  --mint: #6affc5;
+  --cyan: #63d2e6;
+  --on-brand: #151515;
+  --on-mint: #151515;
+
+  /* On a dark page the dark band inverts to light, the way MetaMask
+     alternates grounds down the page. */
+  --band-dark-bg: #efeef3;
+  --band-dark-ink: #151515;
+  --band-dark-ink-2: #4a4a55;
+  --band-dark-rule: #cacad4;
+  --band-dark-surface: #ffffff;
+
+  --best: #6affc5;
+  --best-soft: #0a2a1e;
+  --caution: #e5a34a;
+  --caution-soft: #2e2312;
+  --absent: #92929f;
+
+  --focus: #8fb6ff;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    font-size: var(--text-base);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  strong,
+  b {
+    font-weight: 600;
+  }
+
+  /* Every monetary figure aligns down a column. */
+  .numeric {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1, 'zero' 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* The hero line only, as MetaMask uses MM Poly for exactly one line. */
+  .display {
+    font-family: var(--font-display), var(--font-ui), sans-serif;
+    font-stretch: 118%;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 0.9;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--brand);
+    color: var(--on-brand);
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /*
+   * Code blocks keep their own palette in every theme and inside every band.
+   * Inheriting the page colours would put mint and amber syntax tokens on the
+   * pale ground of an inverted band, at around 1.4:1.
+   */
+  .code-block {
+    --code-bg: #0e0e10;
+    --code-chrome: #1a1a1d;
+    --code-rule: #2c2c32;
+    --code-fg: #c9c9d4;
+    --code-key: #efeef3;
+    --code-string: #6affc5; /* Onramper mint */
+    --code-number: #63d2e6; /* Onramper cyan */
+    --code-comment: #8a8a99;
+
+    background-color: var(--code-bg);
+    border-color: var(--code-rule);
+    color: var(--code-fg);
+  }
+
+  .code-block__chrome {
+    background-color: var(--code-chrome);
+    border-color: var(--code-rule);
+  }
+
+  /*
+   * Onramper's colour pattern: full-bleed sections alternating between the
+   * page lavender and white, with the brand blue used exactly once, for the
+   * closing call to action. The black is only the announcement strip and the
+   * primary buttons. Nothing else on the page is a coloured band.
+   */
+  .sec-paper {
+    background-color: var(--paper);
+  }
+
+  .sec-white {
+    background-color: var(--surface);
+    --paper: var(--surface);
+    --surface-2: var(--paper-2);
+  }
+
+  .sec-blue {
+    background-color: var(--brand);
+    color: var(--on-brand);
+    --paper: var(--brand);
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --ink: #151515;
+    --ink-2: #0a2438; /* 5.00:1 on #0093FF */
+    --ink-3: #0a2438;
+    --rule: #4fb0ff;
+    --rule-2: #0074cc;
+    --best: #00502f;
+    --caution: #5c3200;
+    --absent: #0a2438;
+  }
+
+  /* The announcement strip, and nothing else, is black. */
+  .strip {
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+
+  /*
+   * The results table lays itself out against ITS OWN width, not the
+   * viewport's. Viewport breakpoints cannot see that a table has been put
+   * inside a narrow card, and when that happened the six columns overlapped
+   * into an unreadable mess at full desktop width. A container query cannot
+   * make that mistake.
+   */
+  .quotes {
+    container-type: inline-size;
+    /*
+     * The action column is a fixed width, not `auto`. Each row and the header
+     * are separate grids, so an intrinsic column resolves to a different width
+     * in every one of them — the provider names differ — and the figures end
+     * up ragged down the page. A comparison table has to align.
+     */
+    --qcol-actions: 18rem;
+  }
+
+  .qrow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px 16px;
+    padding: 16px;
+  }
+
+  .qhead {
+    display: none;
+  }
+
+  .qcell {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .qcell-label {
+    font-size: var(--text-xs);
+    color: var(--ink-3);
+  }
+
+  .qamount {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .qactions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .qactions > .qaction-primary {
+    flex: 1 1 auto;
+  }
+
+  @container (min-width: 800px) {
+    .qrow,
+    .qhead {
+      grid-template-columns:
+        minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr)
+        minmax(0, 0.7fr) minmax(0, 1.2fr) var(--qcol-actions);
+      gap: 0 16px;
+      padding: 12px 20px;
+    }
+
+    .qrow {
+      align-items: center;
+    }
+
+    .qhead {
+      display: grid;
+      align-items: baseline;
+    }
+
+    .qcell {
+      display: block;
+    }
+
+    .qcell-label {
+      display: none;
+    }
+
+    .qamount {
+      align-items: flex-end;
+    }
+
+    .qactions {
+      justify-content: flex-end;
+    }
+
+    .qactions > .qaction-primary {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  /*
+   * The one orchestrated moment: when quotes resolve, the axis draws from the
+   * centre outward and the provider ticks settle onto it. ~400ms, ease-out,
+   * and nothing else on the page animates on load.
+   */
+  .spread-axis {
+    transform: scaleX(0);
+    animation: spread-draw 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .spread-tick {
+    opacity: 0;
+    animation: spread-settle 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: var(--tick-delay, 0ms);
+  }
+
+  .spread-label {
+    opacity: 0;
+    animation: spread-fade 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: 300ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spread-axis {
+      transform: none;
+      animation: none;
+    }
+    .spread-tick,
+    .spread-label {
+      opacity: 1;
+      transform: none;
+      animation: none;
+    }
+  }
+}
+
+@layer utilities {
+  .measure-content {
+    max-width: var(--measure-content);
+  }
+  .measure-page {
+    max-width: var(--measure-page);
+  }
+}
+
+@keyframes spread-draw {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes spread-settle {
+  from {
+    opacity: 0;
+    transform: translateX(var(--tick-offset, 0px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spread-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
