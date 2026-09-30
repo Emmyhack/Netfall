@@ -30,8 +30,8 @@ const RULES = [
   ],
 ];
 
-export default function HowWeMakeMoneyPage() {
-  const providers = listProviders();
+export default async function HowWeMakeMoneyPage() {
+  const providers = await listProviders();
   const paying = providers.filter((p) => p.hasCommercialRelationship);
   const notPaying = providers.filter((p) => !p.hasCommercialRelationship);
 

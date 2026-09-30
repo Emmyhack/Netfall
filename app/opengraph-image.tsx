@@ -14,7 +14,7 @@ export const alt = 'Netfall — see what actually lands';
  * layer, the same as the pages; nothing is typed into the artwork.
  */
 export default async function OpenGraphImage() {
-  const coverage = computeCoverage();
+  const coverage = await computeCoverage();
   const [medium, semibold] = await Promise.all([outfitFont(500), outfitFont(600)]);
 
   return new ImageResponse(

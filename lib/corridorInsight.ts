@@ -21,10 +21,10 @@ export interface CorridorInsight {
  *
  * Seeded so a statically generated page says the same thing on every build.
  */
-export function corridorInsight(corridor: CorridorMeta): CorridorInsight {
-  const response = sampleCorridor(corridor.slug, corridor.defaultAmount, `page:${corridor.slug}`);
+export async function corridorInsight(corridor: CorridorMeta): Promise<CorridorInsight> {
+  const response = await sampleCorridor(corridor.slug, corridor.defaultAmount, `page:${corridor.slug}`);
 
-  const directory = listProviders();
+  const directory = await listProviders();
   const inCorridor = corridor.providers
     .map((slug) => directory.find((p) => p.slug === slug))
     .filter((p): p is (typeof directory)[number] => p !== undefined);

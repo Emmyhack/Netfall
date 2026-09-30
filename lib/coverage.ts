@@ -15,13 +15,13 @@ export interface Coverage {
  * LIVE: the engine exposes the same three numbers over /v1/coverage, computed
  * across the last hour of real quotes rather than one seeded sample.
  */
-export function computeCoverage(seed = 'coverage'): Coverage {
+export async function computeCoverage(seed = 'coverage'): Promise<Coverage> {
   const providers = new Set<string>();
   const measurements: { slug: string; from: string; to: string; dispersionBps: number }[] = [];
 
   for (const corridor of CORRIDORS) {
     for (const provider of corridor.providers) providers.add(provider);
-    const response = sampleCorridor(corridor.slug, corridor.defaultAmount, seed);
+    const response = await sampleCorridor(corridor.slug, corridor.defaultAmount, seed);
     if (!response || response.quotes.length < 2) continue;
     measurements.push({
       slug: corridor.slug,

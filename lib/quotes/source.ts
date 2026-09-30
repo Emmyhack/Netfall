@@ -1,5 +1,3 @@
-import { buildPlan, assembleResponse, QUOTE_TTL_SECONDS } from '../mock/engine';
-import { MOCK_PROVIDERS } from '../mock/providers';
 import type {
   ProviderProfile,
   Quote,
@@ -15,10 +13,17 @@ import type {
  * Today everything below resolves a seeded mock plan on timers. When the
  * quote engine exists, this file becomes a set of fetches and nothing above
  * it — components, hooks, pages, tests — changes. It is the only module in
- * the application that imports lib/mock; the development harnesses and the
+ * the application that touches lib/mock; the development harnesses and the
  * mock's own tests are the deliberate exceptions.
  *
- * LIVE: replace the four function bodies below with calls to the engine.
+ * The mock is loaded with a dynamic import, never statically. It stands in
+ * for a network service, so it enters the page the way the service would: at
+ * the moment of the first request, off the critical path. Statically imported
+ * it rode in every page's first-load JavaScript — six kilobytes of provider
+ * registry and pricing logic that production will never ship, paid before a
+ * single figure was on screen.
+ *
+ * LIVE: replace the function bodies below with calls to the engine.
  *   streamQuotes        -> GET /v1/quote, streamed
  *   fetchQuotes         -> the same call, awaited
  *   sampleCorridor      -> GET /v1/coverage/{corridor}, at build time
@@ -28,63 +33,82 @@ import type {
  * `error`.
  */
 
-export { QUOTE_TTL_SECONDS };
+export const QUOTE_TTL_SECONDS = 90;
+
+const engine = () => import('../mock/engine');
+const providers = () => import('../mock/providers');
 
 export type Unsubscribe = () => void;
 
 export function streamQuotes(request: QuoteRequest, onEvent: (event: QuoteEvent) => void): Unsubscribe {
-  const planned = buildPlan(request);
-
-  if (!planned.ok) {
-    // Errors still arrive asynchronously, so consumers have one code path.
-    const handle = setTimeout(() => onEvent({ type: 'error', error: planned.error }), 0);
-    return () => clearTimeout(handle);
-  }
-
-  const { plan } = planned;
-  const timers: ReturnType<typeof setTimeout>[] = [];
   let cancelled = false;
+  let cancelPlan: (() => void) | null = null;
 
-  const quotes: Quote[] = [];
-  const unavailable: UnavailableQuote[] = [];
-  let remaining = plan.outcomes.length;
-
-  onEvent({
-    type: 'started',
-    requestId: plan.requestId,
-    corridor: plan.corridor.id,
-    expected: plan.outcomes.length,
-  });
-
-  const finishIfDone = (): void => {
-    if (cancelled || remaining > 0) return;
-    onEvent({ type: 'settled', response: assembleResponse(plan, quotes, unavailable) });
-  };
-
-  if (plan.outcomes.length === 0) {
-    const handle = setTimeout(finishIfDone, 0);
-    timers.push(handle);
-  }
-
-  for (const outcome of plan.outcomes) {
-    const handle = setTimeout(() => {
+  engine()
+    .then(({ buildPlan, assembleResponse }) => {
       if (cancelled) return;
-      if (outcome.result.kind === 'quote') {
-        quotes.push(outcome.result.quote);
-        onEvent({ type: 'quote', quote: outcome.result.quote });
-      } else {
-        unavailable.push(outcome.result.entry);
-        onEvent({ type: 'unavailable', entry: outcome.result.entry });
+
+      const planned = buildPlan(request);
+
+      if (!planned.ok) {
+        onEvent({ type: 'error', error: planned.error });
+        return;
       }
-      remaining -= 1;
-      finishIfDone();
-    }, outcome.latencyMs);
-    timers.push(handle);
-  }
+
+      const { plan } = planned;
+      const timers: ReturnType<typeof setTimeout>[] = [];
+      const quotes: Quote[] = [];
+      const unavailable: UnavailableQuote[] = [];
+      let remaining = plan.outcomes.length;
+
+      onEvent({
+        type: 'started',
+        requestId: plan.requestId,
+        corridor: plan.corridor.id,
+        expected: plan.outcomes.length,
+      });
+
+      const finishIfDone = (): void => {
+        if (cancelled || remaining > 0) return;
+        onEvent({ type: 'settled', response: assembleResponse(plan, quotes, unavailable) });
+      };
+
+      if (plan.outcomes.length === 0) {
+        timers.push(setTimeout(finishIfDone, 0));
+      }
+
+      for (const outcome of plan.outcomes) {
+        const handle = setTimeout(() => {
+          if (cancelled) return;
+          if (outcome.result.kind === 'quote') {
+            quotes.push(outcome.result.quote);
+            onEvent({ type: 'quote', quote: outcome.result.quote });
+          } else {
+            unavailable.push(outcome.result.entry);
+            onEvent({ type: 'unavailable', entry: outcome.result.entry });
+          }
+          remaining -= 1;
+          finishIfDone();
+        }, outcome.latencyMs);
+        timers.push(handle);
+      }
+
+      cancelPlan = () => {
+        for (const handle of timers) clearTimeout(handle);
+      };
+    })
+    .catch(() => {
+      if (!cancelled) {
+        onEvent({
+          type: 'error',
+          error: { code: 'network', message: 'Could not reach the pricing service.' },
+        });
+      }
+    });
 
   const cancel: Unsubscribe = () => {
     cancelled = true;
-    for (const handle of timers) clearTimeout(handle);
+    cancelPlan?.();
   };
 
   request.signal?.addEventListener('abort', cancel, { once: true });
@@ -107,24 +131,6 @@ export function fetchQuotes(request: QuoteRequest): Promise<QuoteResponse> {
   });
 }
 
-/**
- * Resolves a plan with no latency at all. Static pages need corridor figures
- * at build time, where waiting on simulated provider timers is pointless.
- *
- * LIVE: this becomes a plain server-side call to the engine.
- */
-export function fetchQuotesImmediate(request: QuoteRequest): QuoteResponse | { error: true; message: string } {
-  const planned = buildPlan(request);
-  if (!planned.ok) return { error: true, message: planned.error.message };
-  const quotes: Quote[] = [];
-  const unavailable: UnavailableQuote[] = [];
-  for (const outcome of planned.plan.outcomes) {
-    if (outcome.result.kind === 'quote') quotes.push(outcome.result.quote);
-    else unavailable.push(outcome.result.entry);
-  }
-  return assembleResponse(planned.plan, quotes, unavailable);
-}
-
 /* -------------------------------------------------------------------------- */
 /* Build-time reads                                                           */
 /* -------------------------------------------------------------------------- */
@@ -134,16 +140,17 @@ export function fetchQuotesImmediate(request: QuoteRequest): QuoteResponse | { e
  * figures and the per-corridor copy on statically generated pages. Seeded, so
  * a given build always says the same thing.
  *
- * LIVE: GET /v1/coverage/{corridor}, which reports the observed dispersion
- * over a recent window rather than one sampled request.
+ * LIVE: GET /v1/coverage/{corridor}.
  */
-export function sampleCorridor(
+export async function sampleCorridor(
   corridorSlug: string,
   amount: string,
   seed: string,
-): QuoteResponse | null {
-  const result = fetchQuotesImmediate({ corridor: corridorSlug, amount, seed });
-  return 'error' in result ? null : result;
+): Promise<QuoteResponse | null> {
+  const { buildPlan, resolvePlan } = await engine();
+  const planned = buildPlan({ corridor: corridorSlug, amount, seed });
+  if (!planned.ok) return null;
+  return resolvePlan(planned.plan);
 }
 
 /**
@@ -153,7 +160,8 @@ export function sampleCorridor(
  *
  * LIVE: GET /v1/providers.
  */
-export function listProviders(): ProviderProfile[] {
+export async function listProviders(): Promise<ProviderProfile[]> {
+  const { MOCK_PROVIDERS } = await providers();
   return MOCK_PROVIDERS.map((provider) => ({
     slug: provider.slug,
     name: provider.name,
@@ -161,8 +169,4 @@ export function listProviders(): ProviderProfile[] {
     hasCommercialRelationship: provider.hasCommercialRelationship,
     routeUrlTemplate: provider.routeUrlTemplate,
   }));
-}
-
-export function findProvider(slug: string): ProviderProfile | null {
-  return listProviders().find((provider) => provider.slug === slug) ?? null;
 }

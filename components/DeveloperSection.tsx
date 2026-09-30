@@ -28,8 +28,8 @@ const RESPONSE = `{
   ]
 }`;
 
-export function DeveloperSection({ tone = 'paper' }: { tone?: SectionTone }) {
-  const coverage = computeCoverage();
+export async function DeveloperSection({ tone = 'paper' }: { tone?: SectionTone }) {
+  const coverage = await computeCoverage();
 
   return (
     <Section tone={tone} labelledBy="developers-heading">
