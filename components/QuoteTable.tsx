@@ -80,7 +80,9 @@ export function QuoteTable({
         />
       )}
 
-      {expired && state.generatedAt && (
+      {/* Expiry renews itself; this banner is the fallback for when it
+          cannot — a refresh that failed, or quotes born with no lifetime. */}
+      {expired && !state.refreshing && state.generatedAt && (
         <QuoteExpired generatedAt={state.generatedAt} onRefresh={state.refresh} />
       )}
 
@@ -105,7 +107,13 @@ export function QuoteTable({
                 : 'Getting prices'}
             </h2>
             <p className="numeric text-xs text-ink-3">
-              {countdown ? `Valid for ${countdown}` : expired ? 'Expired' : ''}
+              {state.refreshing
+                ? 'Updating prices\u2026'
+                : countdown
+                  ? `Valid for ${countdown}`
+                  : expired
+                    ? 'Expired'
+                    : ''}
             </p>
           </div>
 
@@ -197,6 +205,7 @@ function statusAnnouncement(
 ): string {
   if (state.status === 'idle') return '';
   if (state.status === 'error') return state.error?.message ?? 'Could not get prices.';
+  if (state.refreshing) return 'Prices expired. Getting current prices.';
   if (state.expired) return 'These prices have expired. Refresh to see current prices.';
 
   if (loading) {

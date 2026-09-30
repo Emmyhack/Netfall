@@ -23,6 +23,7 @@ function stateFrom(response: QuoteResponse, overrides: Partial<QuoteState> = {})
     generatedAt: response.generatedAt,
     expired: false,
     msRemaining: 60_000,
+    refreshing: false,
     refresh: () => undefined,
     ...overrides,
   };
@@ -120,6 +121,23 @@ describe('rule §4.6 — the cost of choosing badly is stated in the sending cur
   it('quantifies the loss in naira', () => {
     render(<QuoteTable state={stateFrom(normal)} corridor={corridor} inputAmount="500000" />);
     expect(screen.getByText(/Picking the worst of these costs you/)).toBeInTheDocument();
+  });
+});
+
+describe('auto-refresh — an expiring board renews itself quietly', () => {
+  it('holds the struck figures without the manual banner while renewing', () => {
+    render(
+      <QuoteTable
+        state={stateFrom(normal, { expired: true, msRemaining: -1000, refreshing: true })}
+        corridor={corridor}
+        inputAmount="500000"
+      />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Refresh prices' })).toBeNull();
+    expect(screen.getByText('Updating prices…')).toBeInTheDocument();
+    // The board itself stays on screen — no skeleton flash mid-renewal.
+    expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0);
   });
 });
 
