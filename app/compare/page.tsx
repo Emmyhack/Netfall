@@ -21,8 +21,11 @@ export const metadata: Metadata = {
  * The index the corridor pages hang off. Without it /compare was a 404 that
  * search engines would find from the sitemap and from trimmed URLs.
  */
-export default function CompareIndexPage() {
-  const coverage = computeCoverage();
+export default async function CompareIndexPage() {
+  const coverage = await computeCoverage();
+  const corridorCards = await Promise.all(
+    CORRIDORS.map(async (corridor) => ({ corridor, insight: await corridorInsight(corridor) })),
+  );
 
   return (
     <>
@@ -47,8 +50,7 @@ export default function CompareIndexPage() {
         />
 
         <ul className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CORRIDORS.map((corridor) => {
-            const insight = corridorInsight(corridor);
+          {corridorCards.map(({ corridor, insight }) => {
             return (
               <li key={corridor.slug}>
                 <Link

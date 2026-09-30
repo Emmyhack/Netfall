@@ -37,7 +37,7 @@ export default async function CorridorOpenGraphImage({
   const corridor = getCorridor(params.corridor);
   if (!corridor) notFound();
 
-  const insight = corridorInsight(corridor);
+  const insight = await corridorInsight(corridor);
   const [medium, semibold] = await Promise.all([outfitFont(500), outfitFont(600)]);
 
   return new ImageResponse(

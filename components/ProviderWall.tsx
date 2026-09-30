@@ -7,8 +7,8 @@ import { Section, SectionHeading, type SectionTone } from './ui/Section';
  * Doubles as disclosure — an aggregator is marked as one and so is a provider
  * we earn from, before you have scrolled anywhere.
  */
-export function ProviderWall({ tone = 'paper' }: { tone?: SectionTone }) {
-  const providers = listProviders();
+export async function ProviderWall({ tone = 'paper' }: { tone?: SectionTone }) {
+  const providers = await listProviders();
   const methods = Array.from(new Set(CORRIDORS.flatMap((c) => c.commonPaymentMethods)));
 
   return (

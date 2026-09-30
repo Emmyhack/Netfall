@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     return { title: 'Corridor not tracked', robots: { index: false, follow: true } };
   }
 
-  const insight = corridorInsight(corridor);
+  const insight = await corridorInsight(corridor);
   const title = `${corridor.from} to ${corridor.to} rates compared`;
   const description = corridorSummary(corridor, insight);
 
@@ -58,7 +58,7 @@ export default async function CorridorPage({ params }: Params) {
   // so re-enabling dynamic params cannot silently render a broken page.
   if (!corridor) notFound();
 
-  const insight = corridorInsight(corridor);
+  const insight = await corridorInsight(corridor);
   const others = CORRIDORS.filter((c) => c.slug !== corridor.slug);
 
   return (

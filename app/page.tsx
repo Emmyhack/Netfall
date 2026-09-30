@@ -32,8 +32,8 @@ const PROMISES = [
   ],
 ];
 
-export default function HomePage() {
-  const coverage = computeCoverage();
+export default async function HomePage() {
+  const coverage = await computeCoverage();
 
   return (
     <>

@@ -60,8 +60,8 @@ const best = quote.quotes[0];
 // Monetary values are decimal strings. Never parse them into a number.
 console.log(best.landedAmount, best.confidence);`;
 
-export default function ApiPage() {
-  const coverage = computeCoverage();
+export default async function ApiPage() {
+  const coverage = await computeCoverage();
 
   return (
     <>

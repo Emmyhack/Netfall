@@ -4,8 +4,8 @@ import { computeCoverage } from '@/lib/coverage';
 import { Section, SectionHeading, type SectionTone } from './ui/Section';
 
 /** Every figure is measured from the data layer, never written into markup. */
-export function CoverageStats({ tone = 'paper' }: { tone?: SectionTone }) {
-  const coverage = computeCoverage();
+export async function CoverageStats({ tone = 'paper' }: { tone?: SectionTone }) {
+  const coverage = await computeCoverage();
 
   const stats = [
     { value: String(coverage.corridorCount), label: 'corridors tracked' },
