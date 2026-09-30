@@ -209,16 +209,6 @@
     letter-spacing: -0.02em;
   }
 
-  /* The hero line only, as MetaMask uses MM Poly for exactly one line. */
-  .display {
-    font-family: var(--font-display), var(--font-ui), sans-serif;
-    font-stretch: 118%;
-    font-weight: 700;
-    letter-spacing: -0.035em;
-    line-height: 0.9;
-    text-wrap: balance;
-  }
-
   :focus-visible {
     outline: 2px solid var(--focus);
     outline-offset: 2px;

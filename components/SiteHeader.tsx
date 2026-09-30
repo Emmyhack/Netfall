@@ -38,7 +38,6 @@ export function SiteHeader() {
           <Link
             href="/"
             className="font-display text-xl font-bold tracking-tight text-ink"
-            style={{ fontStretch: '112%' }}
           >
             Netfall
           </Link>
