@@ -8,7 +8,8 @@ import { BreadcrumbJsonLd, FaqJsonLd } from '@/components/JsonLd';
 import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { CORRIDORS, getCorridor } from '@/lib/corridors';
-import { corridorNote } from '@/lib/corridorNotes';
+import { corridorNote, paymentMethodsFor } from '@/lib/corridorNotes';
+import { providersFor } from '@/lib/live/registry-core';
 import { corridorInsight, corridorSummary } from '@/lib/corridorInsight';
 import { formatBps, formatMoney, formatPaymentMethods } from '@/lib/format';
 
@@ -27,6 +28,15 @@ export function generateStaticParams() {
  * indexable soft 404.
  */
 export const dynamicParams = false;
+
+/*
+ * Deliberately fully static, no revalidate: with ISR enabled on this dynamic
+ * segment, unknown corridor slugs stopped being rejected at the routing
+ * layer and streamed 200 shells again — the exact soft-404 this route was
+ * fixed for. The live quotes on the page come from the client fan-out and
+ * are always fresh; only the prose measurement freezes at build, and it is
+ * phrased as "when we last measured".
+ */
 
 type Params = { params: Promise<{ corridor: string }> };
 
@@ -78,15 +88,15 @@ export default async function CorridorPage({ params }: Params) {
         heroSlot={
           <div className="lg:pt-4">
             <Pill className="mb-6">
-              {corridor.providers.length} providers · typical spread{' '}
-              {formatBps(corridor.typicalDispersionBps)}
+              {providersFor(corridor.slug).length} providers tracked ·{' '}
+              {providersFor(corridor.slug).filter((p) => p.integrated).length} with live pricing
             </Pill>
 
             <h1 className="text-display text-ink">
               {corridor.from} to {corridor.to}: what actually lands
             </h1>
             <p className="mt-6 max-w-content text-lg text-ink-2">
-              {corridor.providers.length} providers convert {corridor.fromName} into{' '}
+              {providersFor(corridor.slug).length} providers convert {corridor.fromName} into{' '}
               {corridor.toName}, and they advertise their prices in ways you cannot compare.
               Below is what each one would actually deliver on your amount.
             </p>
@@ -112,15 +122,15 @@ export default async function CorridorPage({ params }: Params) {
           <div className="space-y-5">
             <p className="max-w-content text-lg text-ink-2">{corridorNote(corridor.slug)}</p>
             <p className="max-w-content text-lg text-ink-2">
-              On a typical {formatMoney(insight.sampleAmount, corridor.from, { decimals: 0 })}{' '}
-              transfer, the gap between best and worst was{' '}
-              {formatBps(insight.measuredDispersionBps)}
-              {insight.bestLanded && insight.worstLanded
+              {insight.measuredDispersionBps > 0
+                ? `On a typical ${formatMoney(insight.sampleAmount, corridor.from, { decimals: 0 })} transfer, the gap between best and worst was ${formatBps(insight.measuredDispersionBps)}`
+                : `On a typical ${formatMoney(insight.sampleAmount, corridor.from, { decimals: 0 })} transfer we could not measure a spread when this page was generated — too few venues answered`}
+              {insight.measuredDispersionBps > 0 && insight.bestLanded && insight.worstLanded
                 ? ` — ${formatMoney(insight.bestLanded, corridor.to)} against ${formatMoney(insight.worstLanded, corridor.to)}`
                 : ''}
               .{' '}
               {insight.unavailableCount > 0
-                ? `${insight.unavailableCount} of the ${corridor.providers.length} providers could not quote at all when we last measured, which is normal here.`
+                ? `${insight.unavailableCount} of the ${providersFor(corridor.slug).length} providers could not quote at all when we last measured, which is normal here.`
                 : 'Every provider quoted when we last measured, which is unusual.'}
             </p>
             {insight.fastestSettlement && (
@@ -133,7 +143,7 @@ export default async function CorridorPage({ params }: Params) {
 
           <dl className="space-y-6">
             {[
-              ['Payment methods people use here', formatPaymentMethods(corridor.commonPaymentMethods)],
+              ['Payment methods people use here', formatPaymentMethods(paymentMethodsFor(corridor.slug))],
               ['Providers we track', formatPaymentMethods(insight.providerNames)],
               ...(insight.aggregatorNames.length > 0
                 ? ([
@@ -191,8 +201,7 @@ export default async function CorridorPage({ params }: Params) {
                   {other.from} to {other.to}
                 </span>
                 <span className="mt-8 border-t border-rule pt-4 text-sm text-ink-2">
-                  {other.providers.length} providers · ~{formatBps(other.typicalDispersionBps)}{' '}
-                  spread
+                  {providersFor(other.slug).length} providers tracked
                 </span>
               </Link>
             </li>

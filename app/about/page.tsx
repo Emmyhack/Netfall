@@ -7,6 +7,9 @@ import { computeCoverage } from '@/lib/coverage';
 import { formatBps } from '@/lib/format';
 import { CORRIDORS } from '@/lib/corridors';
 
+/** Live figures refresh on this cadence rather than freezing at build. */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'What Netfall measures',
   description:

@@ -356,9 +356,16 @@
   @container (min-width: 800px) {
     .qrow,
     .qhead {
+      /*
+       * The middle tracks are a variable: settlement and completion columns
+       * exist only when at least one quote actually carries that data, so
+       * the table sets --qmid to match what it renders. Stating figures
+       * nobody measured is not an option, and permanent em-dash columns
+       * would just be that with extra steps.
+       */
       grid-template-columns:
-        minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 0.8fr)
-        minmax(0, 0.7fr) minmax(0, 1.2fr) var(--qcol-actions);
+        minmax(0, 1.6fr) minmax(0, 1fr) var(--qmid, minmax(0, 0.8fr) minmax(0, 0.7fr))
+        minmax(0, 1.2fr) var(--qcol-actions);
       gap: 0 16px;
       padding: 12px 20px;
     }

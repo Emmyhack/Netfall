@@ -1,8 +1,8 @@
 import type { AssetCode, CorridorMeta, CorridorSlug, FiatCode } from './types';
 
 /**
- * V1 corridors. Everything that varies per corridor — copy, limits, provider
- * coverage — is declared here so pages and mocks read from one source.
+ * V1 corridors: copy and limits. Which providers serve a corridor is the
+ * provider registry's business (lib/live/registry-core.ts), not this file's.
  */
 
 export const FIAT_NAMES: Readonly<Record<FiatCode, string>> = {
@@ -19,36 +19,6 @@ export const ASSET_NAMES: Readonly<Record<AssetCode, string>> = {
 export const FIAT_CODES: readonly FiatCode[] = ['NGN', 'GHS', 'KES'];
 export const ASSET_CODES: readonly AssetCode[] = ['USDT', 'USDC'];
 
-const NGN_PROVIDERS_USDT = [
-  'yellowcard',
-  'busha',
-  'quidax',
-  'roqqu',
-  'binance-p2p',
-  'bitnob',
-  'accrue',
-  'juicyway',
-  'transak',
-  'moonpay',
-];
-
-const NGN_PROVIDERS_USDC = [
-  'yellowcard',
-  'busha',
-  'quidax',
-  'binance-p2p',
-  'bitnob',
-  'accrue',
-  'transak',
-  'moonpay',
-];
-
-const GHS_PROVIDERS = ['yellowcard', 'bitnob', 'fonbnk', 'binance-p2p', 'accrue', 'transak', 'moonpay'];
-const GHS_PROVIDERS_USDC = ['yellowcard', 'bitnob', 'fonbnk', 'binance-p2p', 'transak', 'moonpay'];
-
-const KES_PROVIDERS = ['yellowcard', 'bitnob', 'binance-p2p', 'fonbnk', 'luno', 'transak', 'moonpay'];
-const KES_PROVIDERS_USDC = ['yellowcard', 'bitnob', 'binance-p2p', 'fonbnk', 'luno', 'transak', 'moonpay'];
-
 export const CORRIDORS: readonly CorridorMeta[] = [
   {
     slug: 'ngn-usdt',
@@ -57,14 +27,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDT',
     fromName: FIAT_NAMES.NGN,
     toName: ASSET_NAMES.USDT,
-    countryName: 'Nigeria',
     defaultAmount: '500000',
     minAmount: '5000',
     maxAmount: '500000000',
     otcThreshold: '50000000',
-    typicalDispersionBps: 310,
-    commonPaymentMethods: ['Bank transfer', 'Card', 'USSD', 'Opay', 'PalmPay'],
-    providers: NGN_PROVIDERS_USDT,
   },
   {
     slug: 'ngn-usdc',
@@ -73,14 +39,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDC',
     fromName: FIAT_NAMES.NGN,
     toName: ASSET_NAMES.USDC,
-    countryName: 'Nigeria',
     defaultAmount: '500000',
     minAmount: '5000',
     maxAmount: '300000000',
     otcThreshold: '40000000',
-    typicalDispersionBps: 275,
-    commonPaymentMethods: ['Bank transfer', 'Card', 'USSD'],
-    providers: NGN_PROVIDERS_USDC,
   },
   {
     slug: 'ghs-usdt',
@@ -89,14 +51,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDT',
     fromName: FIAT_NAMES.GHS,
     toName: ASSET_NAMES.USDT,
-    countryName: 'Ghana',
     defaultAmount: '5000',
     minAmount: '50',
     maxAmount: '5000000',
     otcThreshold: '500000',
-    typicalDispersionBps: 385,
-    commonPaymentMethods: ['MTN MoMo', 'Telecel Cash', 'AirtelTigo Money', 'Bank transfer'],
-    providers: GHS_PROVIDERS,
   },
   {
     slug: 'ghs-usdc',
@@ -105,14 +63,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDC',
     fromName: FIAT_NAMES.GHS,
     toName: ASSET_NAMES.USDC,
-    countryName: 'Ghana',
     defaultAmount: '5000',
     minAmount: '50',
     maxAmount: '3000000',
     otcThreshold: '400000',
-    typicalDispersionBps: 340,
-    commonPaymentMethods: ['MTN MoMo', 'Telecel Cash', 'Bank transfer'],
-    providers: GHS_PROVIDERS_USDC,
   },
   {
     slug: 'kes-usdt',
@@ -121,14 +75,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDT',
     fromName: FIAT_NAMES.KES,
     toName: ASSET_NAMES.USDT,
-    countryName: 'Kenya',
     defaultAmount: '50000',
     minAmount: '500',
     maxAmount: '50000000',
     otcThreshold: '4000000',
-    typicalDispersionBps: 265,
-    commonPaymentMethods: ['M-Pesa', 'Bank transfer', 'Airtel Money'],
-    providers: KES_PROVIDERS,
   },
   {
     slug: 'kes-usdc',
@@ -137,14 +87,10 @@ export const CORRIDORS: readonly CorridorMeta[] = [
     to: 'USDC',
     fromName: FIAT_NAMES.KES,
     toName: ASSET_NAMES.USDC,
-    countryName: 'Kenya',
     defaultAmount: '50000',
     minAmount: '500',
     maxAmount: '30000000',
     otcThreshold: '3500000',
-    typicalDispersionBps: 290,
-    commonPaymentMethods: ['M-Pesa', 'Bank transfer'],
-    providers: KES_PROVIDERS_USDC,
   },
 ];
 

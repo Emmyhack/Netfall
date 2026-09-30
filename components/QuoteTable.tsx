@@ -40,6 +40,17 @@ export function QuoteTable({
   const { quotes, unavailable, status, expired } = state;
   const gaps = useMemo(() => shortfalls(quotes), [quotes]);
 
+  // Columns exist only when at least one quote actually carries the data.
+  // The live path states nothing it cannot back; the mock states everything.
+  const showSettlement = quotes.some((q) => q.settlementEstimateSeconds !== undefined);
+  const showSuccessRate = quotes.some((q) => q.successRate30d !== undefined);
+  const midTemplate = [
+    showSettlement ? 'minmax(0, 0.8fr)' : '',
+    showSuccessRate ? 'minmax(0, 0.7fr)' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   const expected = Math.max(state.expected, expectedProviders);
   const pending = Math.max(0, expected - state.received);
   const loading = status === 'idle' || status === 'loading' || status === 'partial';
@@ -85,6 +96,7 @@ export function QuoteTable({
         <section
           aria-labelledby="results-heading"
           className={`${QUOTE_CONTAINER} overflow-hidden rounded-card border border-rule bg-surface`}
+          style={{ '--qmid': midTemplate || ' ' } as React.CSSProperties}
         >
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-rule px-5 py-4">
             <h2 id="results-heading" className="text-xl text-ink">
@@ -105,8 +117,12 @@ export function QuoteTable({
           >
             <span className="text-xs font-medium text-ink-3">Provider</span>
             <span className="text-xs font-medium text-ink-3">Rate</span>
-            <span className="text-xs font-medium text-ink-3">Settles in</span>
-            <span className="text-xs font-medium text-ink-3">Completed 30d</span>
+            {showSettlement && (
+              <span className="text-xs font-medium text-ink-3">Settles in</span>
+            )}
+            {showSuccessRate && (
+              <span className="text-xs font-medium text-ink-3">Completed 30d</span>
+            )}
             <span className="text-right text-xs font-medium text-ink-3">
               What you&rsquo;ll receive
             </span>
@@ -125,13 +141,21 @@ export function QuoteTable({
                 toCurrency={corridor.to}
                 shortfall={gaps[index] ?? null}
                 expired={expired}
+                showSettlement={showSettlement}
+                showSuccessRate={showSuccessRate}
               />
             ))}
           </ol>
 
           {/* One skeleton per provider still outstanding, uncapped, so rows and
               skeletons always total the same number and nothing shifts. */}
-          {loading && pending > 0 && <QuoteTableSkeleton rows={pending} />}
+          {loading && pending > 0 && (
+            <QuoteTableSkeleton
+              rows={pending}
+              showSettlement={showSettlement}
+              showSuccessRate={showSuccessRate}
+            />
+          )}
 
           <div className="border-t border-rule px-5 py-4">
             <p className="text-xs text-ink-3">

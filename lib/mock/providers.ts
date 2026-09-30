@@ -38,14 +38,14 @@ function profile(p: MockProviderProfile): MockProviderProfile {
   return p;
 }
 
-const route = (host: string): string => `https://${host}/?ref=netfall&corridor={corridor}&amount={amount}`;
+const route = (host: string): string => `https://${host}/`;
 
 export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
   profile({
     slug: 'yellowcard',
     name: 'Yellow Card',
     source: 'direct',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('yellowcard.io'),
     // Markets itself on zero fees and takes all of it in the rate.
     spreadBpsRange: [95, 165],
@@ -65,7 +65,7 @@ export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
     slug: 'busha',
     name: 'Busha',
     source: 'direct',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('busha.co'),
     spreadBpsRange: [55, 105],
     percentFeeBps: 45,
@@ -142,7 +142,7 @@ export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
     slug: 'bitnob',
     name: 'Bitnob',
     source: 'direct',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('bitnob.com'),
     spreadBpsRange: [80, 145],
     percentFeeBps: 25,
@@ -181,7 +181,7 @@ export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
     slug: 'juicyway',
     name: 'Juicyway',
     source: 'direct',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('juicyway.com'),
     spreadBpsRange: [50, 100],
     percentFeeBps: 50,
@@ -239,7 +239,7 @@ export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
     slug: 'transak',
     name: 'Transak',
     source: 'aggregator',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('global.transak.com'),
     spreadBpsRange: [135, 225],
     percentFeeBps: 99,
@@ -259,7 +259,7 @@ export const MOCK_PROVIDERS: readonly MockProviderProfile[] = [
     slug: 'moonpay',
     name: 'MoonPay',
     source: 'aggregator',
-    hasCommercialRelationship: true,
+    hasCommercialRelationship: false,
     routeUrlTemplate: route('buy.moonpay.com'),
     spreadBpsRange: [155, 270],
     percentFeeBps: 145,

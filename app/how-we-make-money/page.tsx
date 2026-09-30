@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { CORRIDORS } from '@/lib/corridors';
-import { listProviders } from '@/lib/quotes/source';
+import { listProviders } from '@/lib/quotes/server';
 
 export const metadata: Metadata = {
   title: 'How we make money',
   description:
-    'Netfall earns a referral commission from some providers. It has no effect on ranking. Here is exactly how the money works and which providers pay us.',
+    'Right now, Netfall earns nothing from any provider it lists. Here is the current commercial position in full, and the rules that will hold if that ever changes.',
   alternates: { canonical: '/how-we-make-money' },
 };
 
@@ -43,16 +43,16 @@ export default async function HowWeMakeMoneyPage() {
           <h1 className="text-display max-w-[54rem] text-ink">How we make money</h1>
           <div className="mt-8 max-w-content space-y-5 text-lg text-ink-2">
             <p>
-              Netfall earns a referral commission when you follow a link to some of the providers
-              we list and complete a transfer. You pay nothing extra: the commission comes out of
-              the provider&rsquo;s own margin, and the rate you get is the rate we showed you.
+              The current position, in one sentence: Netfall earns nothing from any provider it
+              lists. No referral fees, no commissions, no paid placement, from anyone. The
+              business intends to earn referral revenue eventually — that model is described
+              below — but no such agreement exists today, and this page will say so plainly for
+              exactly as long as that stays true.
             </p>
             <p>
-              The commission has no effect on where a provider appears. Ranking is a sort on one
-              field — the amount that lands — in descending order. There is no weighting, no
-              tiebreak in a partner&rsquo;s favour, and no way for a commercial team to change it.
-              Providers who pay us nothing outrank providers who do, constantly, and we publish it
-              that way.
+              Whatever the commercial position becomes, ranking is a sort on one field — the
+              amount that lands — in descending order. There is no weighting, no tiebreak in a
+              partner&rsquo;s favour, and no way for a commercial team to change it.
             </p>
           </div>
         </div>
@@ -60,11 +60,13 @@ export default async function HowWeMakeMoneyPage() {
 
       <Section tone="paper" labelledBy="who-pays">
         <h2 id="who-pays" className="text-3xl text-ink">
-          Who pays us and who does not
+          Who pays us today
         </h2>
         <p className="mt-5 max-w-content text-lg text-ink-2">
-          Every provider we track. This list is generated from the same configuration that drives
-          the comparison tables, so it cannot drift out of date.
+          Nobody. The list below is generated from the same configuration that drives the
+          comparison tables, so if an agreement is ever signed it cannot be hidden — the flag
+          that labels a provider in the results table is the same one that moves them into the
+          first column here.
         </p>
 
         <div className="mt-10 grid gap-8 sm:grid-cols-2">

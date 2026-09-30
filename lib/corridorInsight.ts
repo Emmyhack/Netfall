@@ -1,5 +1,7 @@
 import { formatBps, formatMoney, formatSettlement } from './format';
-import { listProviders, sampleCorridor } from './quotes/source';
+import { sampleCorridor } from './quotes/server';
+import { providersFor } from './live/registry-core';
+import { liveProvidersFor } from './live/registry';
 import type { CorridorMeta } from './types';
 
 export interface CorridorInsight {
@@ -24,17 +26,16 @@ export interface CorridorInsight {
 export async function corridorInsight(corridor: CorridorMeta): Promise<CorridorInsight> {
   const response = await sampleCorridor(corridor.slug, corridor.defaultAmount, `page:${corridor.slug}`);
 
-  const directory = await listProviders();
-  const inCorridor = corridor.providers
-    .map((slug) => directory.find((p) => p.slug === slug))
-    .filter((p): p is (typeof directory)[number] => p !== undefined);
+  const inCorridor = liveProvidersFor(corridor.slug);
 
   const providerNames = inCorridor.map((p) => p.name);
   const aggregatorNames = inCorridor.filter((p) => p.source === 'aggregator').map((p) => p.name);
 
   if (!response) {
     return {
-      measuredDispersionBps: corridor.typicalDispersionBps,
+      // 0 here means "not measured", never a claim of a tight market; the
+      // copy that renders this value says so in words.
+      measuredDispersionBps: 0,
       quotingCount: 0,
       unavailableCount: 0,
       providerNames,
@@ -46,10 +47,12 @@ export async function corridorInsight(corridor: CorridorMeta): Promise<CorridorI
     };
   }
 
-  const fastest = response.quotes.reduce<number | null>(
-    (best, q) => (best === null || q.settlementEstimateSeconds < best ? q.settlementEstimateSeconds : best),
-    null,
-  );
+  const fastest = response.quotes.reduce<number | null>((best, q) => {
+    if (q.settlementEstimateSeconds === undefined) return best;
+    return best === null || q.settlementEstimateSeconds < best
+      ? q.settlementEstimateSeconds
+      : best;
+  }, null);
 
   return {
     measuredDispersionBps: response.dispersionBps,
@@ -66,10 +69,13 @@ export async function corridorInsight(corridor: CorridorMeta): Promise<CorridorI
 
 /** One-sentence summary used in metadata descriptions and social cards. */
 export function corridorSummary(corridor: CorridorMeta, insight: CorridorInsight): string {
+  const base =
+    `Compare ${providersFor(corridor.slug).length} providers converting ${corridor.fromName} to ` +
+    `${corridor.toName}, ranked by how much actually lands.`;
+  if (insight.measuredDispersionBps <= 0) return base;
   return (
-    `Compare ${corridor.providers.length} providers converting ${corridor.fromName} to ` +
-    `${corridor.toName}, ranked by how much actually lands. Typical spread between best and ` +
-    `worst is ${formatBps(insight.measuredDispersionBps)} on ` +
+    `${base} Measured spread between best and worst: ` +
+    `${formatBps(insight.measuredDispersionBps)} on ` +
     `${formatMoney(insight.sampleAmount, corridor.from, { decimals: 0 })}.`
   );
 }

@@ -120,6 +120,8 @@ export function DevComponentGallery() {
                 fromCurrency={corridor.from}
                 toCurrency={corridor.to}
                 shortfall={gaps[index] ?? null}
+                showSettlement
+                showSuccessRate
               />
             </ol>
           </DevCase>
@@ -136,6 +138,8 @@ export function DevComponentGallery() {
                 toCurrency={corridor.to}
                 shortfall={null}
                 expired
+                showSettlement
+                showSuccessRate
               />
             </ol>
           )}

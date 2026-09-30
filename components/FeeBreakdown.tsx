@@ -104,12 +104,14 @@ export function FeeBreakdown({ quote, inputAmount, fromCurrency, id }: FeeBreakd
           <dt className="text-xs text-ink-3">Pay with</dt>
           <dd className="text-sm text-ink-2">{formatPaymentMethods(quote.paymentMethods)}</dd>
         </div>
-        <div className="flex justify-between gap-4 sm:block">
-          <dt className="text-xs text-ink-3">Typically settles in</dt>
-          <dd className="text-sm text-ink-2">
-            {formatSettlement(quote.settlementEstimateSeconds)}
-          </dd>
-        </div>
+        {quote.settlementEstimateSeconds !== undefined && (
+          <div className="flex justify-between gap-4 sm:block">
+            <dt className="text-xs text-ink-3">Typically settles in</dt>
+            <dd className="text-sm text-ink-2">
+              {formatSettlement(quote.settlementEstimateSeconds)}
+            </dd>
+          </div>
+        )}
       </dl>
 
       {quote.confidence !== 'exact' && (

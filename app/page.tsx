@@ -11,6 +11,7 @@ import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section, SectionHeading } from '@/components/ui/Section';
 import { CORRIDORS } from '@/lib/corridors';
 import { computeCoverage } from '@/lib/coverage';
+import { providersFor } from '@/lib/live/registry-core';
 import { formatBps } from '@/lib/format';
 
 const PROMISES = [
@@ -19,8 +20,8 @@ const PROMISES = [
     'No sponsored placement and no paid boost. The order is one sort on one field.',
   ],
   [
-    'Relationships labelled in the table',
-    'Next to the provider, at the point of comparison, every single time.',
+    'Any future relationship gets labelled in the table',
+    'Next to the provider, at the point of comparison, before anything else changes.',
   ],
   [
     'Providers that failed are still shown',
@@ -31,6 +32,9 @@ const PROMISES = [
     'A breakdown that does not reconcile shows an error, not a rounded number.',
   ],
 ];
+
+/** Live figures refresh on this cadence rather than freezing at build. */
+export const revalidate = 300;
 
 export default async function HomePage() {
   const coverage = await computeCoverage();
@@ -83,8 +87,8 @@ export default async function HomePage() {
           <div>
             <SectionHeading
               id="money-heading"
-              title="We earn a commission. It buys nobody a better position."
-              standfirst="You pay nothing extra — it comes out of the provider's own margin — and it has no effect on where anyone ranks."
+              title="Nobody pays us. Nothing moves the ranking."
+              standfirst="Netfall currently earns no commission from any provider listed. When that changes, the affected providers get labelled in the table before anything else does."
               size="lg"
             />
             <ButtonLink href="/how-we-make-money" variant="primary" size="lg" className="mt-12">
@@ -128,9 +132,11 @@ export default async function HomePage() {
                   </span>
                 </div>
                 <div className="mt-12 flex items-baseline justify-between border-t border-rule pt-5">
-                  <span className="text-sm text-ink-3">{corridor.providers.length} providers</span>
-                  <span className="numeric text-sm text-ink-2">
-                    ~{formatBps(corridor.typicalDispersionBps)} spread
+                  <span className="text-sm text-ink-3">{providersFor(corridor.slug).length} providers</span>
+                  <span className="text-sm text-ink-3">
+                    {providersFor(corridor.slug).some((p) => p.integrated)
+                      ? 'live pricing'
+                      : 'tracked'}
                   </span>
                 </div>
               </Link>

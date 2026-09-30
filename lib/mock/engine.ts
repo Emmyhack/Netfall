@@ -26,7 +26,9 @@ import type {
 import { rankQuotes } from '../quotes/ranking';
 import { midMarketRate } from './market';
 import { getMockProvider, type MockProviderProfile } from './providers';
+import { mockRosterFor } from './roster';
 import { createRng, type Rng } from './rng';
+import { paymentMethodsFor } from '../corridorNotes';
 
 /**
  * The adversarial mock engine.
@@ -197,13 +199,13 @@ function priceQuote(provider: MockProviderProfile, ctx: PricingContext, rng: Rng
 }
 
 function intersectMethods(provider: MockProviderProfile, corridor: CorridorMeta): string[] {
-  const shared = corridor.commonPaymentMethods.filter((m) =>
+  const shared = paymentMethodsFor(corridor.slug).filter((m) =>
     provider.paymentMethods.some((p) => p.toLowerCase() === m.toLowerCase()),
   );
   if (shared.length > 0) return shared;
   // Mobile-money corridors: match the generic label to the local network.
   if (provider.paymentMethods.includes('Mobile money')) {
-    const local = corridor.commonPaymentMethods.find((m) =>
+    const local = paymentMethodsFor(corridor.slug).find((m) =>
       /momo|m-pesa|cash|money/i.test(m),
     );
     if (local) return [local];
@@ -246,7 +248,7 @@ export function buildPlan(request: QuoteRequest): PlanResult {
     flatten: scenario === 'zero-dispersion',
   };
 
-  const slugs = corridor.providers;
+  const slugs = mockRosterFor(corridor.slug);
   const outcomes: PlannedOutcome[] = [];
 
   slugs.forEach((slug, index) => {

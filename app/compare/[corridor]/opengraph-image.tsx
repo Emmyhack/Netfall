@@ -5,6 +5,7 @@ import { SpreadMotif } from '@/lib/og/SpreadMotif';
 import { OG } from '@/lib/og/theme';
 import { getCorridor } from '@/lib/corridors';
 import { corridorInsight } from '@/lib/corridorInsight';
+import { providersFor } from '@/lib/live/registry-core';
 import { formatBps, formatDecimal } from '@/lib/format';
 
 export const size = { width: OG.width, height: OG.height };
@@ -18,7 +19,7 @@ export function generateImageMetadata({ params }: { params: { corridor: string }
       size,
       contentType,
       alt: corridor
-        ? `${corridor.from} to ${corridor.to} compared across ${corridor.providers.length} providers on Netfall`
+        ? `${corridor.from} to ${corridor.to} compared across ${providersFor(corridor.slug).length} providers on Netfall`
         : 'Netfall corridor comparison',
     },
   ];
@@ -68,7 +69,7 @@ export default async function CorridorOpenGraphImage({
               padding: '10px 28px',
             }}
           >
-            {corridor.providers.length} providers compared
+            {providersFor(corridor.slug).length} providers compared
           </div>
         </div>
 

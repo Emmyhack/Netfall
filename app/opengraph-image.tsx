@@ -5,6 +5,9 @@ import { OG } from '@/lib/og/theme';
 import { computeCoverage } from '@/lib/coverage';
 import { formatBps } from '@/lib/format';
 
+/** Live figures refresh on this cadence rather than freezing at build. */
+export const revalidate = 300;
+
 export const size = { width: OG.width, height: OG.height };
 export const contentType = 'image/png';
 export const alt = 'Netfall — see what actually lands';

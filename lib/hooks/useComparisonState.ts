@@ -154,8 +154,12 @@ export function useComparisonState(options: {
     [amountInput, writeUrl],
   );
 
-  const seedParam = searchParams.get('seed');
-  const scenarioParam = searchParams.get('scenario');
+  // The mock harness parameters mean nothing in production (source.ts never
+  // loads the mock there), so the check is a build-time constant and this
+  // parsing — and the scenario list — is stripped from the production bundle.
+  const devHarness = process.env.NODE_ENV !== 'production';
+  const seedParam = devHarness ? searchParams.get('seed') : null;
+  const scenarioParam = devHarness ? searchParams.get('scenario') : null;
 
   return {
     corridor,

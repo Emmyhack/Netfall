@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { mockRosterFor } from '../mock/roster';
 import { CORRIDORS } from '../corridors';
 import { buildPlan, resolvePlan } from '../mock/engine';
 import { rankQuotes } from './ranking';
@@ -100,8 +101,9 @@ describe('rule §4.3 — unavailable providers are reported, never dropped', () 
         ...response.quotes.map((q) => q.provider),
         ...response.unavailable.map((u) => u.provider),
       ]);
-      expect(seen.size).toBe(corridor.providers.length);
-      for (const slug of corridor.providers) expect(seen.has(slug)).toBe(true);
+      const roster = mockRosterFor(corridor.slug);
+      expect(seen.size).toBe(roster.length);
+      for (const slug of roster) expect(seen.has(slug)).toBe(true);
     }
   });
 

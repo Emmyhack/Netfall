@@ -1,7 +1,7 @@
 import type { CorridorSlug } from './types';
 
 /**
- * Editorial copy per corridor, kept out of lib/corridors.ts so it never
+ * Editorial copy and payment methods per corridor, kept out of lib/corridors.ts so it never
  * travels in the client bundle: only the statically generated corridor page
  * renders it.
  *
@@ -22,6 +22,20 @@ export const CORRIDOR_NOTES: Readonly<Record<CorridorSlug, string>> = {
   'kes-usdc':
     'Growing, but still behind USDT on both depth and coverage. Settlement is usually fast; the cost sits in the rate rather than the fee.',
 };
+
+/** How people in each corridor commonly pay in. Server-rendered copy only. */
+export const CORRIDOR_PAYMENT_METHODS: Readonly<Record<CorridorSlug, readonly string[]>> = {
+  'ngn-usdt': ['Bank transfer', 'Card', 'USSD', 'Opay', 'PalmPay'],
+  'ngn-usdc': ['Bank transfer', 'Card', 'USSD'],
+  'ghs-usdt': ['MTN MoMo', 'Telecel Cash', 'AirtelTigo Money', 'Bank transfer'],
+  'ghs-usdc': ['MTN MoMo', 'Telecel Cash', 'Bank transfer'],
+  'kes-usdt': ['M-Pesa', 'Bank transfer', 'Airtel Money'],
+  'kes-usdc': ['M-Pesa', 'Bank transfer'],
+};
+
+export function paymentMethodsFor(slug: string): readonly string[] {
+  return CORRIDOR_PAYMENT_METHODS[slug] ?? [];
+}
 
 export function corridorNote(slug: string): string {
   return CORRIDOR_NOTES[slug] ?? '';

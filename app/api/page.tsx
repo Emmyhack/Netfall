@@ -5,6 +5,9 @@ import { Section } from '@/components/ui/Section';
 import { computeCoverage } from '@/lib/coverage';
 import { CORRIDORS } from '@/lib/corridors';
 
+/** Live figures refresh on this cadence rather than freezing at build. */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: 'Netfall API',
   description:

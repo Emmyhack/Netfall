@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import { formatMoney } from '@/lib/format';
 import { greaterThan } from '@/lib/money';
+import { providersFor } from '@/lib/live/registry-core';
 import { useComparisonState } from '@/lib/hooks/useComparisonState';
 import { useQuotes } from '@/lib/hooks/useQuotes';
 import type { CorridorMeta } from '@/lib/types';
@@ -128,7 +129,7 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
                     href="#results"
                     className="mt-6 inline-flex text-sm font-medium text-ink underline underline-offset-4"
                   >
-                    See all {corridor.providers.length} providers ranked
+                    See all {providersFor(corridor.slug).length} providers compared
                   </a>
                 </div>
               )}
@@ -144,7 +145,7 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
           inputAmount={amount ?? corridor.defaultAmount}
           dispersionBps={quotes.dispersionBps}
           settled={quotes.status === 'settled'}
-          expectedProviders={corridor.providers.length}
+          expectedProviders={providersFor(corridor.slug).length}
         />
       )}
 
@@ -158,7 +159,7 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
             corridor={corridor}
             inputAmount={amount ?? corridor.defaultAmount}
             showSpreadBar
-            expectedProviders={corridor.providers.length}
+            expectedProviders={providersFor(corridor.slug).length}
           />
         )}
         </div>

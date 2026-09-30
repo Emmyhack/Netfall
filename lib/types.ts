@@ -22,8 +22,14 @@ export interface Quote {
   landedAmount: string; // decimal string, never a JS number
   effectiveRate: string;
   feeBreakdown: FeeLine[];
-  settlementEstimateSeconds: number;
-  successRate30d: number; // 0..1
+  /**
+   * Optional, and absent unless there is verifiable data behind it. A
+   * production comparison must not state settlement times or completion
+   * rates for real companies that nobody has measured; the mock populates
+   * them for development, the live path omits them until they are earned.
+   */
+  settlementEstimateSeconds?: number;
+  successRate30d?: number; // 0..1
   paymentMethods: string[];
   confidence: Confidence;
   hasCommercialRelationship: boolean;
@@ -36,7 +42,13 @@ export type UnavailableReason =
   | 'timeout'
   | 'corridor_unsupported'
   | 'provider_down'
-  | 'insufficient_data';
+  | 'insufficient_data'
+  /**
+   * We track this provider but have no live pricing integration with them
+   * yet — no public API, or a partner API we hold no credentials for.
+   * Absence is information; pretending otherwise would be worse.
+   */
+  | 'not_configured';
 
 export interface UnavailableQuote {
   provider: string;
@@ -72,18 +84,12 @@ export interface CorridorMeta {
   to: AssetCode;
   fromName: string; // "Nigerian naira"
   toName: string; // "Tether USD"
-  countryName: string; // "Nigeria"
   /** Sensible starting amount for the corridor, decimal string. */
   defaultAmount: string;
   minAmount: string;
   maxAmount: string;
   /** Above this, the comparison hands over to the large-amount flow. */
   otcThreshold: string;
-  /** Typical dispersion for the corridor, basis points. Copy + metadata only. */
-  typicalDispersionBps: number;
-  commonPaymentMethods: string[];
-  /** Provider slugs that quote this corridor at all. */
-  providers: string[];
 }
 
 /* -------------------------------------------------------------------------- */
@@ -141,6 +147,8 @@ export interface ProviderProfile {
   source: QuoteSource;
   hasCommercialRelationship: boolean;
   routeUrlTemplate: string;
+  /** Whether a live pricing integration exists for this provider. */
+  integrated?: boolean;
 }
 
 /* -------------------------------------------------------------------------- */

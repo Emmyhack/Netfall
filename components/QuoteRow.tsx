@@ -31,6 +31,9 @@ export interface QuoteRowProps {
   /** Shortfall against the best landed amount, in the destination asset. */
   shortfall: string | null;
   expired?: boolean;
+  /** Whether the table is rendering these columns at all. */
+  showSettlement: boolean;
+  showSuccessRate: boolean;
 }
 
 /**
@@ -58,6 +61,8 @@ export function QuoteRow({
   toCurrency,
   shortfall,
   expired = false,
+  showSettlement,
+  showSuccessRate,
 }: QuoteRowProps) {
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
@@ -105,20 +110,28 @@ export function QuoteRow({
           </span>
         </Cell>
 
-        <Cell label="Settles in">
-          <span className="truncate text-sm text-ink-2">
-            {formatSettlement(quote.settlementEstimateSeconds)}
-          </span>
-        </Cell>
+        {showSettlement && (
+          <Cell label="Settles in">
+            <span className="truncate text-sm text-ink-2">
+              {quote.settlementEstimateSeconds !== undefined
+                ? formatSettlement(quote.settlementEstimateSeconds)
+                : '\u2014'}
+            </span>
+          </Cell>
+        )}
 
-        <Cell label="Completed in the last 30 days">
-          <span
-            className="numeric truncate text-sm text-ink-2"
-            title="Share of transfers that completed in the last 30 days."
-          >
-            {formatRatioPercent(quote.successRate30d)}
-          </span>
-        </Cell>
+        {showSuccessRate && (
+          <Cell label="Completed in the last 30 days">
+            <span
+              className="numeric truncate text-sm text-ink-2"
+              title="Share of transfers that completed in the last 30 days."
+            >
+              {quote.successRate30d !== undefined
+                ? formatRatioPercent(quote.successRate30d)
+                : '\u2014'}
+            </span>
+          </Cell>
+        )}
 
         {/* Landed amount — the figure the whole product exists to report */}
         <div className="qamount">
