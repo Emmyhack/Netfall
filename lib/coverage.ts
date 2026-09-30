@@ -1,5 +1,6 @@
 import { CORRIDORS } from './corridors';
-import { sampleCorridor } from './quotes/source';
+import { sampleCorridor } from './quotes/server';
+import { providersFor } from './live/registry-core';
 
 export interface Coverage {
   corridorCount: number;
@@ -17,19 +18,28 @@ export interface Coverage {
  */
 export async function computeCoverage(seed = 'coverage'): Promise<Coverage> {
   const providers = new Set<string>();
-  const measurements: { slug: string; from: string; to: string; dispersionBps: number }[] = [];
-
   for (const corridor of CORRIDORS) {
-    for (const provider of corridor.providers) providers.add(provider);
-    const response = await sampleCorridor(corridor.slug, corridor.defaultAmount, seed);
-    if (!response || response.quotes.length < 2) continue;
-    measurements.push({
+    for (const provider of providersFor(corridor.slug)) providers.add(provider.slug);
+  }
+
+  // Corridors sample in parallel: sequential awaits meant every corridor
+  // paid the full timeout of every unreachable venue, one after another,
+  // and a page prerender drowned in the accumulated waiting.
+  const sampled = await Promise.all(
+    CORRIDORS.map(async (corridor) => ({
+      corridor,
+      response: await sampleCorridor(corridor.slug, corridor.defaultAmount, seed),
+    })),
+  );
+
+  const measurements = sampled
+    .filter(({ response }) => response !== null && response.quotes.length >= 2)
+    .map(({ corridor, response }) => ({
       slug: corridor.slug,
       from: corridor.from,
       to: corridor.to,
-      dispersionBps: response.dispersionBps,
-    });
-  }
+      dispersionBps: (response as NonNullable<typeof response>).dispersionBps,
+    }));
 
   const sorted = measurements.map((m) => m.dispersionBps).sort((a, b) => a - b);
   const widest = measurements.reduce<(typeof measurements)[number] | null>(

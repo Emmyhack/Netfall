@@ -23,6 +23,7 @@ function stateFrom(response: QuoteResponse, overrides: Partial<QuoteState> = {})
     generatedAt: response.generatedAt,
     expired: false,
     msRemaining: 60_000,
+    refreshing: false,
     refresh: () => undefined,
     ...overrides,
   };
@@ -93,12 +94,26 @@ describe('rule §4.4 and §4.5 — source and commercial relationship are disclo
     }
   });
 
-  it('marks every provider we earn from, and discloses the arrangement on the surface', () => {
+  it('states the current commercial position on the surface', () => {
     render(<QuoteTable state={stateFrom(normal)} corridor={corridor} inputAmount="500000" />);
-    const paid = normal.quotes.filter((q) => q.hasCommercialRelationship);
-    expect(screen.getAllByText('We earn a commission').length).toBe(paid.length);
-    expect(screen.getByText(/Ranking is by landed amount only/)).toBeInTheDocument();
+    // No agreement exists today, and no quote may claim one.
+    expect(normal.quotes.every((q) => !q.hasCommercialRelationship)).toBe(true);
+    expect(screen.queryByText('We earn a commission')).not.toBeInTheDocument();
+    expect(screen.getByText(/currently earns nothing from any provider/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'How we make money' })).toBeInTheDocument();
+  });
+
+  it('labels a provider the moment a commercial flag exists', () => {
+    // The machinery has to work on the day an agreement is signed: flipping
+    // the flag is the only step, and the label appears at the row.
+    const flagged: QuoteResponse = {
+      ...normal,
+      quotes: normal.quotes.map((q, i) =>
+        i === 0 ? { ...q, hasCommercialRelationship: true } : q,
+      ),
+    };
+    render(<QuoteTable state={stateFrom(flagged)} corridor={corridor} inputAmount="500000" />);
+    expect(screen.getAllByText('We earn a commission').length).toBe(1);
   });
 });
 
@@ -106,6 +121,23 @@ describe('rule §4.6 — the cost of choosing badly is stated in the sending cur
   it('quantifies the loss in naira', () => {
     render(<QuoteTable state={stateFrom(normal)} corridor={corridor} inputAmount="500000" />);
     expect(screen.getByText(/Picking the worst of these costs you/)).toBeInTheDocument();
+  });
+});
+
+describe('auto-refresh — an expiring board renews itself quietly', () => {
+  it('holds the struck figures without the manual banner while renewing', () => {
+    render(
+      <QuoteTable
+        state={stateFrom(normal, { expired: true, msRemaining: -1000, refreshing: true })}
+        corridor={corridor}
+        inputAmount="500000"
+      />,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Refresh prices' })).toBeNull();
+    expect(screen.getByText('Updating prices…')).toBeInTheDocument();
+    // The board itself stays on screen — no skeleton flash mid-renewal.
+    expect(screen.getAllByRole('listitem').length).toBeGreaterThan(0);
   });
 });
 

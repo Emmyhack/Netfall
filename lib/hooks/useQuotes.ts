@@ -30,6 +30,8 @@ export interface QuoteState {
   generatedAt: string | null;
   expired: boolean;
   msRemaining: number | null;
+  /** A same-inputs re-fetch is streaming in behind the visible figures. */
+  refreshing: boolean;
   refresh: () => void;
 }
 
@@ -52,6 +54,7 @@ interface InternalState {
   expected: number;
   generatedAt: string | null;
   expiresAt: string | null;
+  refreshing: boolean;
 }
 
 const INITIAL: InternalState = {
@@ -64,7 +67,15 @@ const INITIAL: InternalState = {
   expected: 0,
   generatedAt: null,
   expiresAt: null,
+  refreshing: false,
 };
+
+/**
+ * A quote born with less life than this never auto-renews: a provider whose
+ * responses arrive expired (or a skewed clock upstream) would otherwise turn
+ * auto-refresh into a fetch loop. It falls back to the manual banner instead.
+ */
+const MIN_HONEST_LIFETIME_MS = 5000;
 
 /**
  * Subscribes to the quote stream and keeps a ranked, partially-filled view of
@@ -82,8 +93,12 @@ export function useQuotes({
   const [nonce, setNonce] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const cancelRef = useRef<(() => void) | null>(null);
+  const refreshingRef = useRef(false);
 
-  const refresh = useCallback(() => setNonce((n) => n + 1), []);
+  const refresh = useCallback(() => {
+    refreshingRef.current = true;
+    setNonce((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     cancelRef.current?.();
@@ -93,15 +108,31 @@ export function useQuotes({
       return;
     }
 
-    setState({ ...INITIAL, status: 'loading' });
+    // A refresh over identical inputs keeps the settled board on screen and
+    // streams the replacement in behind it; the swap happens whole, at
+    // 'settled', so the table never flashes back to skeletons. Anything else
+    // (first load, corridor or amount change, retry out of an error) starts
+    // clean because the visible figures would belong to different inputs.
+    const carryOver = refreshingRef.current;
+    refreshingRef.current = false;
+    setState((previous) =>
+      carryOver && previous.status === 'settled' && previous.quotes.length > 0
+        ? { ...previous, refreshing: true }
+        : { ...INITIAL, status: 'loading' },
+    );
 
     const cancel = streamQuotes({ corridor, amount, seed, scenario }, (event) => {
       setState((previous) => {
+        // Mid-stream events never disturb a board held through a refresh;
+        // it swaps wholesale at 'settled' or surrenders to 'error'.
+        if (previous.refreshing && (event.type === 'quote' || event.type === 'unavailable')) {
+          return previous;
+        }
         switch (event.type) {
           case 'started':
             return {
               ...previous,
-              status: 'loading',
+              status: previous.refreshing ? previous.status : 'loading',
               requestId: event.requestId,
               expected: event.expected,
             };
@@ -121,6 +152,7 @@ export function useQuotes({
             return {
               ...previous,
               status: 'settled',
+              refreshing: false,
               response: event.response,
               quotes: event.response.quotes,
               unavailable: event.response.unavailable,
@@ -128,7 +160,7 @@ export function useQuotes({
               expiresAt: event.response.expiresAt,
             };
           case 'error':
-            return { ...previous, status: 'error', error: event.error };
+            return { ...previous, status: 'error', refreshing: false, error: event.error };
         }
       });
     });
@@ -150,6 +182,33 @@ export function useQuotes({
     return new Date(state.expiresAt).getTime() - now;
   }, [state.expiresAt, now]);
 
+  const expired = msRemaining !== null && msRemaining <= 0;
+
+  // Expiry renews itself: prices refresh automatically instead of asking for
+  // a click. A quote that never had an honest lifetime is left to the manual
+  // banner, and so is a failed renewal, which lands in 'error' and stops here.
+  const autoRenews = useMemo(() => {
+    if (!expired || state.status !== 'settled' || !state.generatedAt || !state.expiresAt) {
+      return false;
+    }
+    const lifetime = new Date(state.expiresAt).getTime() - new Date(state.generatedAt).getTime();
+    return lifetime >= MIN_HONEST_LIFETIME_MS;
+  }, [expired, state.status, state.generatedAt, state.expiresAt]);
+
+  useEffect(() => {
+    if (!autoRenews || state.refreshing) return;
+    // A hidden tab holds off until it is looked at again.
+    if (document.visibilityState === 'hidden') {
+      const onVisible = () => {
+        if (document.visibilityState === 'visible') refresh();
+      };
+      document.addEventListener('visibilitychange', onVisible);
+      return () => document.removeEventListener('visibilitychange', onVisible);
+    }
+    refresh();
+    return undefined;
+  }, [autoRenews, state.refreshing, refresh]);
+
   const liveDispersion = useMemo(
     () => state.response?.dispersionBps ?? dispersionBps(state.quotes.map((q) => q.landedAmount)),
     [state.response, state.quotes],
@@ -167,8 +226,11 @@ export function useQuotes({
     dispersionBps: liveDispersion,
     expiresAt: state.expiresAt,
     generatedAt: state.generatedAt,
-    expired: msRemaining !== null && msRemaining <= 0,
+    expired,
     msRemaining,
+    // True from the first expired render, so the manual banner never
+    // flashes (or gets announced) in the frame before the renewal starts.
+    refreshing: state.refreshing || autoRenews,
     refresh,
   };
 }

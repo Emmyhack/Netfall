@@ -16,6 +16,8 @@ const REASONS: Readonly<Record<UnavailableReason, (corridor: CorridorMeta) => st
   provider_down: () => 'Their pricing service is not responding.',
   insufficient_data: () =>
     'Returned a price we could not make sense of, so we are not showing a figure.',
+  not_configured: () =>
+    'We track this provider but have no live pricing integration with them yet, so there is no figure to show.',
 };
 
 export function UnavailableList({

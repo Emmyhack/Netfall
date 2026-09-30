@@ -5,7 +5,15 @@ import { QUOTE_ROW, QUOTE_ROW_CONTENT_HEIGHT } from '../quoteGrid';
  * the real figures arrive. It shares the row's grid class, so it reflows with
  * the table's container rather than the viewport.
  */
-export function QuoteTableSkeleton({ rows = 6 }: { rows?: number }) {
+export function QuoteTableSkeleton({
+  rows = 6,
+  showSettlement = false,
+  showSuccessRate = false,
+}: {
+  rows?: number;
+  showSettlement?: boolean;
+  showSuccessRate?: boolean;
+}) {
   return (
     <ul aria-hidden="true">
       {Array.from({ length: rows }, (_, index) => (
@@ -22,8 +30,8 @@ export function QuoteTableSkeleton({ rows = 6 }: { rows?: number }) {
               <Bar width="5rem" height={11} delay={index * 60 + 30} />
             </div>
             <Bar width="7rem" height={13} delay={index * 60 + 60} />
-            <Bar width="4rem" height={13} delay={index * 60 + 90} />
-            <Bar width="3rem" height={13} delay={index * 60 + 120} />
+            {showSettlement && <Bar width="4rem" height={13} delay={index * 60 + 90} />}
+            {showSuccessRate && <Bar width="3rem" height={13} delay={index * 60 + 120} />}
             <div className="qamount gap-2">
               <Bar width="7rem" height={24} delay={index * 60 + 150} />
               <Bar width="4rem" height={13} delay={index * 60 + 180} />

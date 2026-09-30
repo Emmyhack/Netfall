@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { formatBps, formatMoney } from '@/lib/format';
+import { formatMoney } from '@/lib/format';
 import { newId, saveEnquiry } from '@/lib/storage';
 import type { AlertChannel, CorridorMeta, LargeAmountEnquiry } from '@/lib/types';
 import { Field, Select, SubmitButton, TextArea, TextInput } from './forms';
@@ -131,9 +131,8 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
           the money and we still rank on what lands.
         </p>
         <p className="mt-2 max-w-content text-sm text-ink-3">
-          Typical dispersion in this corridor is {formatBps(corridor.typicalDispersionBps)}. On{' '}
-          {formatMoney(amount, corridor.from, { decimals: 0 })} that difference is worth more than
-          most people expect.
+          On {formatMoney(amount, corridor.from, { decimals: 0 })}, the gap between venues is
+          worth more than most people expect.
         </p>
       </div>
 

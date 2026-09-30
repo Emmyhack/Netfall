@@ -19,7 +19,7 @@ export const FAQ_QUESTIONS: readonly { q: string; a: string }[] = [
   },
   {
     q: 'Why do some providers show no price at all?',
-    a: 'They timed out, their pricing service is down, or your amount falls outside their limits. We list them with the reason instead of hiding them, because a provider that never responds is something you want to know.',
+    a: 'Some have no public pricing API and no integration with us yet \u2014 they are listed as exactly that. Others timed out or are unreachable from your region. We list every one with the reason instead of hiding them, because absence is information.',
   },
   {
     q: 'Why did the prices expire?',

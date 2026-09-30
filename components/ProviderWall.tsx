@@ -1,6 +1,7 @@
-import { listProviders } from '@/lib/quotes/source';
+import { listProviders } from '@/lib/quotes/server';
 import { CORRIDORS } from '@/lib/corridors';
 import { Section, SectionHeading, type SectionTone } from './ui/Section';
+import { paymentMethodsFor } from '@/lib/corridorNotes';
 
 /**
  * The coverage grid: everything we compare, and every way you can pay for it.
@@ -9,7 +10,7 @@ import { Section, SectionHeading, type SectionTone } from './ui/Section';
  */
 export async function ProviderWall({ tone = 'paper' }: { tone?: SectionTone }) {
   const providers = await listProviders();
-  const methods = Array.from(new Set(CORRIDORS.flatMap((c) => c.commonPaymentMethods)));
+  const methods = Array.from(new Set(CORRIDORS.flatMap((c) => paymentMethodsFor(c.slug))));
 
   return (
     <Section tone={tone} labelledBy="providers-heading">
@@ -39,20 +40,25 @@ export async function ProviderWall({ tone = 'paper' }: { tone?: SectionTone }) {
                     aggregator
                   </span>
                 )}
-                {provider.hasCommercialRelationship && (
+                {provider.integrated ? (
                   <span
                     className="h-2 w-2 shrink-0 rounded-full bg-brand"
-                    title="Netfall earns a commission from this provider. It does not affect ranking."
-                    aria-label="We earn a commission from this provider"
+                    title="Live pricing integration: figures come from this provider's public market data."
+                    aria-label="Live pricing integration"
                     role="img"
                   />
+                ) : (
+                  <span className="text-xs text-ink-3" title="No live pricing integration yet.">
+                    no live pricing yet
+                  </span>
                 )}
               </li>
             ))}
           </ul>
           <p className="mt-6 text-sm text-ink-3">
-            A dot marks a provider we earn a commission from. It has no effect on where they
-            rank.
+            A dot marks a live pricing integration. The rest are tracked and appear in results
+            as exactly what they are: not priced yet. Netfall currently earns nothing from any
+            of them.
           </p>
         </div>
 

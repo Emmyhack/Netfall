@@ -1,8 +1,13 @@
 import Link from 'next/link';
 
 /**
- * Rule §4.5: the commercial relationship is stated on every comparison
- * surface, at the point of comparison, not buried in the footer.
+ * Rule §4.5: the commercial position is stated on every comparison surface,
+ * at the point of comparison. The current position is that there is none —
+ * Netfall earns nothing from any provider listed. If that ever changes the
+ * affected providers get labelled in the table before anything else, and
+ * this copy changes with it. Saying "we earn a commission" while no
+ * agreement exists would be the exact kind of invented fact this product
+ * exists to remove.
  */
 export function DisclosureNotice({
   variant = 'inline',
@@ -18,9 +23,10 @@ export function DisclosureNotice({
         aria-label="Commercial disclosure"
       >
         <p className="max-w-content text-base text-ink-2">
-          Netfall earns a referral commission from some of the providers listed here. It does not
-          affect the ranking: providers are ordered by how much actually lands, and by nothing
-          else. Providers we earn from are marked in the table.{' '}
+          Netfall currently earns nothing from any provider shown here — no referral fees, no
+          commissions, no placement. Ranking is by the amount that lands, and by nothing else.
+          If a commercial agreement is ever signed, the affected providers will be labelled in
+          the table itself.{' '}
           <Link href="/how-we-make-money" className="text-ink underline underline-offset-4">
             How we make money
           </Link>
@@ -32,8 +38,7 @@ export function DisclosureNotice({
 
   return (
     <p className={['max-w-content text-xs text-ink-3', className ?? ''].join(' ')}>
-      We earn a commission from some providers, marked in the table. Ranking is by landed amount
-      only.{' '}
+      Netfall currently earns nothing from any provider shown. Ranking is by landed amount only.{' '}
       <Link href="/how-we-make-money" className="text-ink-2 underline underline-offset-4">
         How we make money
       </Link>

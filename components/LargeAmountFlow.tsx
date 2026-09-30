@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useUrlSearchParams } from '@/lib/hooks/useUrlSearchParams';
 import { CORRIDORS, getCorridor } from '@/lib/corridors';
-import { formatAmountInput, formatBps, formatMoney, parseAmountInput, symbolFor } from '@/lib/format';
+import { formatAmountInput, formatMoney, parseAmountInput, symbolFor } from '@/lib/format';
 import { greaterThan } from '@/lib/money';
 import type { CorridorMeta } from '@/lib/types';
 import { HighTicketInterceptor } from './HighTicketInterceptor';
@@ -85,9 +85,8 @@ export function LargeAmountFlow() {
           <p className="mt-2 max-w-content text-base text-ink-2">
             Below {formatMoney(corridor.otcThreshold, corridor.from, { decimals: 0 })} in{' '}
             {corridor.from} to {corridor.to}, retail liquidity is deep enough that the rates on the
-            comparison page are the rates you will actually get. Typical dispersion here is{' '}
-            {formatBps(corridor.typicalDispersionBps)}, and picking well is worth more than
-            negotiating.
+            comparison page are the rates you will actually get, and picking well is worth more
+            than negotiating.
           </p>
           <p className="mt-4">
             <a

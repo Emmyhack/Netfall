@@ -8,7 +8,12 @@ import { Section, SectionHeading } from '@/components/ui/Section';
 import { CORRIDORS } from '@/lib/corridors';
 import { corridorInsight } from '@/lib/corridorInsight';
 import { computeCoverage } from '@/lib/coverage';
+import { providersFor } from '@/lib/live/registry-core';
 import { formatBps, formatMoney, formatPaymentMethods } from '@/lib/format';
+import { paymentMethodsFor } from '@/lib/corridorNotes';
+
+/** Live figures refresh on this cadence rather than freezing at build. */
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: 'Compare every corridor',
@@ -65,19 +70,21 @@ export default async function CompareIndexPage() {
                       {corridor.fromName} into {corridor.toName}
                     </span>
                     <span className="mt-6 block text-sm text-ink-3">
-                      {formatPaymentMethods(corridor.commonPaymentMethods)}
+                      {formatPaymentMethods(paymentMethodsFor(corridor.slug))}
                     </span>
                   </div>
 
                   <dl className="mt-10 space-y-2 border-t border-rule pt-5 text-sm">
                     <div className="flex justify-between gap-4">
                       <dt className="text-ink-3">Providers</dt>
-                      <dd className="numeric text-ink-2">{corridor.providers.length}</dd>
+                      <dd className="numeric text-ink-2">{providersFor(corridor.slug).length}</dd>
                     </div>
                     <div className="flex justify-between gap-4">
                       <dt className="text-ink-3">Measured spread</dt>
-                      <dd className="numeric text-ink-2">
-                        {formatBps(insight.measuredDispersionBps)}
+                      <dd className={insight.measuredDispersionBps > 0 ? 'numeric text-ink-2' : 'text-ink-3'}>
+                        {insight.measuredDispersionBps > 0
+                          ? formatBps(insight.measuredDispersionBps)
+                          : 'not yet measured'}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4">
