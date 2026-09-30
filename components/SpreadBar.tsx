@@ -40,8 +40,37 @@ export interface SpreadBarProps {
 /** Below this measured width the bar drops its ticks for a two-endpoint form. */
 const NARROW_BREAKPOINT = 420;
 
-const FULL = { height: 118, axisY: 56, tickHeight: 14, bestTickHeight: 22, padX: 2, bracketY: 90 };
-const COMPACT = { height: 62, axisY: 40, tickHeight: 10, bestTickHeight: 16, padX: 2, bracketY: 0 };
+const FULL = {
+  height: 196,
+  axisY: 104,
+  tickHeight: 30,
+  bestTickHeight: 46,
+  padX: 2,
+  bracketY: 158,
+  capHeight: 14,
+  endLabel: 13,
+  endValue: 26,
+  gapLabel: 17,
+  axisWidth: 1.5,
+  tickWidth: 2,
+  bestTickWidth: 4,
+};
+
+const COMPACT = {
+  height: 62,
+  axisY: 40,
+  tickHeight: 10,
+  bestTickHeight: 16,
+  padX: 2,
+  bracketY: 0,
+  capHeight: 7,
+  endLabel: 12,
+  endValue: 13,
+  gapLabel: 14,
+  axisWidth: 1,
+  tickWidth: 1.5,
+  bestTickWidth: 2.5,
+};
 
 export function SpreadBar({
   quotes,
@@ -65,7 +94,7 @@ export function SpreadBar({
       <div ref={ref} className={className}>
         <div
           className="flex items-center"
-          style={{ height: geometry.height + (variant === 'full' ? 28 : 26) }}
+          style={{ height: geometry.height + (variant === 'full' ? 30 : 26) }}
         >
           <p className="text-sm text-ink-3">No quotes to plot yet.</p>
         </div>
@@ -103,18 +132,18 @@ export function SpreadBar({
           {/* End labels, above the axis */}
           <text
             x={geometry.padX}
-            y={geometry.axisY - 30}
-            className={`fill-[var(--ink-3)] text-xs ${shouldAnimate ? 'spread-label' : ''}`}
-            style={{ fontSize: 12.8 }}
+            y={geometry.axisY - geometry.endValue - 16}
+            className={`fill-[var(--ink-3)] ${shouldAnimate ? 'spread-label' : ''}`}
+            style={{ fontSize: geometry.endLabel }}
           >
             worst
           </text>
           <text
             x={geometry.padX + innerWidth}
-            y={geometry.axisY - 30}
+            y={geometry.axisY - geometry.endValue - 16}
             textAnchor="end"
-            className={`fill-[var(--best)] text-xs ${shouldAnimate ? 'spread-label' : ''}`}
-            style={{ fontSize: 12.8 }}
+            className={`fill-[var(--best)] ${shouldAnimate ? 'spread-label' : ''}`}
+            style={{ fontSize: geometry.endLabel }}
           >
             best
           </text>
@@ -122,18 +151,18 @@ export function SpreadBar({
           {/* End values */}
           <text
             x={geometry.padX}
-            y={geometry.axisY - 12}
+            y={geometry.axisY - 14}
             className={`numeric fill-[var(--ink-2)] ${shouldAnimate ? 'spread-label' : ''}`}
-            style={{ fontSize: variant === 'compact' ? 13 : 15 }}
+            style={{ fontSize: geometry.endValue }}
           >
             {formatMoney(worst, assetCurrency, { showCode: false })}
           </text>
           <text
             x={geometry.padX + innerWidth}
-            y={geometry.axisY - 12}
+            y={geometry.axisY - 14}
             textAnchor="end"
             className={`numeric fill-[var(--best)] ${shouldAnimate ? 'spread-label' : ''}`}
-            style={{ fontSize: variant === 'compact' ? 13 : 15, fontWeight: 600 }}
+            style={{ fontSize: geometry.endValue, fontWeight: 600 }}
           >
             {formatMoney(best, assetCurrency)}
           </text>
@@ -149,24 +178,24 @@ export function SpreadBar({
               y1={geometry.axisY}
               y2={geometry.axisY}
               stroke="var(--rule-2)"
-              strokeWidth={1}
+              strokeWidth={geometry.axisWidth}
             />
             {/* End caps: the range has hard edges, not a fade. */}
             <line
               x1={geometry.padX}
               x2={geometry.padX}
-              y1={geometry.axisY - 7}
-              y2={geometry.axisY + 7}
+              y1={geometry.axisY - geometry.capHeight}
+              y2={geometry.axisY + geometry.capHeight}
               stroke="var(--rule-2)"
-              strokeWidth={1}
+              strokeWidth={geometry.axisWidth}
             />
             <line
               x1={geometry.padX + innerWidth}
               x2={geometry.padX + innerWidth}
-              y1={geometry.axisY - 7}
-              y2={geometry.axisY + 7}
+              y1={geometry.axisY - geometry.capHeight}
+              y2={geometry.axisY + geometry.capHeight}
               stroke="var(--best)"
-              strokeWidth={1.5}
+              strokeWidth={geometry.bestTickWidth}
             />
           </g>
 
@@ -196,14 +225,14 @@ export function SpreadBar({
                     y1={geometry.axisY - height / 2}
                     y2={geometry.axisY + height / 2}
                     stroke={isBest ? 'var(--best)' : 'var(--ink-3)'}
-                    strokeWidth={isBest ? 2.5 : 1.5}
+                    strokeWidth={isBest ? geometry.bestTickWidth : geometry.tickWidth}
                     strokeLinecap="butt"
                   />
                   {tick.confidence !== 'exact' && (
                     <circle
                       cx={cx}
-                      cy={geometry.axisY + height / 2 + 5}
-                      r={1.75}
+                      cy={geometry.axisY + height / 2 + (variant === 'full' ? 9 : 5)}
+                      r={variant === 'full' ? 3 : 1.75}
                       fill="var(--caution)"
                     />
                   )}
@@ -219,7 +248,7 @@ export function SpreadBar({
                 geometry.padX + innerWidth,
                 geometry.bracketY,
                 centreX,
-                estimateTextWidth(lossLabel.headline, 14) / 2 + 12,
+                estimateTextWidth(lossLabel.headline, geometry.gapLabel) / 2 + 16,
               ).map((d, index) => (
                 <path key={index} d={d} fill="none" stroke="var(--rule-2)" strokeWidth={1} />
               ))}
@@ -229,7 +258,7 @@ export function SpreadBar({
                 textAnchor="middle"
                 dominantBaseline="central"
                 className="fill-[var(--ink)]"
-                style={{ fontSize: 14, fontWeight: 600 }}
+                style={{ fontSize: geometry.gapLabel, fontWeight: 600 }}
               >
                 {lossLabel.headline}
               </text>
