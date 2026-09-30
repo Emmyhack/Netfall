@@ -7,6 +7,14 @@ import { notFound } from 'next/navigation';
  */
 export const metadata = { robots: { index: false, follow: false } };
 
+/*
+ * Rendered per request, so no harness HTML is baked into the production
+ * output. The real production 404 comes from the rewrite in next.config.mjs
+ * — see the note there; this guard is the second line of defence and cannot
+ * set the status itself once streaming has begun.
+ */
+export const dynamic = 'force-dynamic';
+
 export default function DevLayout({ children }: { children: React.ReactNode }) {
   if (process.env.NODE_ENV === 'production') notFound();
 
