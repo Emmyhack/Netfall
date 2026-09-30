@@ -86,7 +86,7 @@ export function CorridorSelector({
             </option>
           ))}
         </select>
-        <p className="mt-2 text-xs text-ink-3">Currency you hold</p>
+        <p className="mt-2 text-xs text-ink-3">What you hold</p>
       </div>
 
       <div>
@@ -107,7 +107,7 @@ export function CorridorSelector({
             ),
           )}
         </select>
-        <p className="mt-2 text-xs text-ink-3">Stablecoin you want</p>
+        <p className="mt-2 text-xs text-ink-3">What you want</p>
       </div>
     </div>
   );
