@@ -28,7 +28,6 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — ${SITE_TAGLINE.toLowerCase()}`,
     description: SITE_DESCRIPTION,
   },
-  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {

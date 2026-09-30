@@ -9,14 +9,17 @@ export function CorridorUnsupported({
   nearest,
   className,
 }: {
-  requested: string;
+  /** The corridor that was asked for, when we know it. */
+  requested?: string;
   nearest: CorridorMeta;
   className?: string;
 }) {
   return (
     <div className={['rounded-card border border-rule-2 bg-surface p-8', className ?? ''].join(' ')}>
       <h2 className="text-3xl text-ink">
-        Netfall does not track {requested.toUpperCase().replace('-', ' to ')}
+        {requested
+          ? `Netfall does not track ${requested.toUpperCase().replace('-', ' to ')}`
+          : 'Netfall does not track that corridor'}
       </h2>
       <p className="mt-2 max-w-content text-base text-ink-2">
         V1 covers three African currencies into the two largest dollar stablecoins. The closest

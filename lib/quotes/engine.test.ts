@@ -187,7 +187,23 @@ describe('mock behaviour §8.1', () => {
   it('is reproducible from a seed', () => {
     const a = resolve('ghs-usdt', '5000', 'repeatable');
     const b = resolve('ghs-usdt', '5000', 'repeatable');
-    expect(b).toEqual(a);
+
+    // The seed governs pricing, not the clock. generatedAt and expiresAt come
+    // from Date.now(), so two consecutive calls that straddle a millisecond
+    // legitimately differ; comparing whole responses made this test flaky.
+    const { generatedAt: _ga, expiresAt: _ea, ...seeded } = a;
+    const { generatedAt: _gb, expiresAt: _eb, ...other } = b;
+    expect(other).toEqual(seeded);
+  });
+
+  it('stamps every response with a validity window', () => {
+    const response = resolve('ghs-usdt', '5000', 'repeatable');
+    const generated = new Date(response.generatedAt).getTime();
+    const expires = new Date(response.expiresAt).getTime();
+
+    expect(Number.isNaN(generated)).toBe(false);
+    expect(Number.isNaN(expires)).toBe(false);
+    expect(expires).toBeGreaterThan(generated);
   });
 
   it('changes with the seed', () => {
