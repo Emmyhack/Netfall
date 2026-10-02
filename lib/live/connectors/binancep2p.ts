@@ -1,3 +1,4 @@
+import { sharedCache } from '../shared';
 import { decimalStringFrom, fetchJson, numberFrom, UpstreamError } from '../http';
 import { grossAtReference, midMarket } from '../midmarket';
 import { divide, round, subtract } from '../../money';
@@ -26,7 +27,7 @@ import type { ConnectorResult } from './types';
 
 const SEARCH_URL = 'https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search';
 
-/** POSTs are uncacheable by the framework, so results memoise here briefly. */
+/** Last good advert list per book, for surfaced-stale fallback. */
 const memo = new Map<string, { at: number; ads: Ad[] }>();
 const MEMO_TTL_MS = 30_000;
 
@@ -64,35 +65,36 @@ function parseAds(payload: unknown): Ad[] {
 
 async function searchAds(fiat: string, asset: string): Promise<{ ads: Ad[]; stale: boolean }> {
   const key = `${fiat}:${asset}`;
-  const cached = memo.get(key);
-  if (cached && Date.now() - cached.at < MEMO_TTL_MS) return { ads: cached.ads, stale: false };
-
-  let payload: unknown;
   try {
-    payload = await fetchJson(SEARCH_URL, {
-    method: 'POST',
-    body: {
-      fiat,
-      asset,
-      tradeType: 'BUY',
-      page: 1,
-      rows: 10,
-      payTypes: [],
-      publisherType: null,
-    },
-    });
+    // Shared across instances for the memo window; the local map below is
+    // only the last-good fallback for when Binance stops answering.
+    const ads = await sharedCache(['binance-p2p', key], MEMO_TTL_MS / 1000, async () =>
+      parseAds(
+        await fetchJson(SEARCH_URL, {
+          method: 'POST',
+          body: {
+            fiat,
+            asset,
+            tradeType: 'BUY',
+            page: 1,
+            rows: 10,
+            payTypes: [],
+            publisherType: null,
+          },
+        }),
+      ),
+    );
+    memo.set(key, { at: Date.now(), ads });
+    return { ads, stale: false };
   } catch (error) {
     // A held advert list within ten minutes beats a blank; the caller
     // downgrades the quote's confidence for it.
-    if (cached && Date.now() - cached.at <= 10 * 60 * 1000) {
-      return { ads: cached.ads, stale: true };
+    const held = memo.get(key);
+    if (held && Date.now() - held.at <= 10 * 60 * 1000) {
+      return { ads: held.ads, stale: true };
     }
     throw error;
   }
-
-  const ads = parseAds(payload);
-  memo.set(key, { at: Date.now(), ads });
-  return { ads, stale: false };
 }
 
 export async function binanceP2pQuote(

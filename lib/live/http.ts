@@ -93,7 +93,7 @@ export async function fetchJson(
   // same cadence a cached GET would be, so bypassing the patch keeps the
   // semantics and returns the routes to the build modes they declare.
   if (method === 'POST') {
-    return postJsonRaw(url, body, timeoutMs);
+    return requestJsonRaw(url, { method: 'POST', body, timeoutMs });
   }
 
   let response: Response;
@@ -122,18 +122,35 @@ export async function fetchJson(
   }
 }
 
-function postJsonRaw(url: string, body: unknown, timeoutMs: number): Promise<unknown> {
+/**
+ * A request that bypasses the framework-patched fetch (see fetchJson). Used
+ * for POSTs and for signed GETs, whose per-request signature would make
+ * every call a cache miss and a no-store fetch anyway. Callers that want a
+ * cross-instance cache wrap the call in sharedCache().
+ */
+export function requestJsonRaw(
+  url: string,
+  options: {
+    method?: 'GET' | 'POST';
+    body?: unknown;
+    headers?: Record<string, string>;
+    timeoutMs?: number;
+  } = {},
+): Promise<unknown> {
+  const { method = 'GET', body, headers = {}, timeoutMs = 9000 } = options;
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify(body ?? {});
+    const payload = method === 'POST' ? JSON.stringify(body ?? {}) : null;
     const req = httpsRequest(
       url,
       {
-        method: 'POST',
+        method,
         headers: {
           'User-Agent': USER_AGENT,
           Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload),
+          ...(payload !== null
+            ? { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(payload)) }
+            : {}),
+          ...headers,
         },
         timeout: timeoutMs,
       },
@@ -159,7 +176,8 @@ function postJsonRaw(url: string, body: unknown, timeoutMs: number): Promise<unk
       reject(new UpstreamError(`${url}: timed out`, 'timeout'));
     });
     req.on('error', () => reject(new UpstreamError(`${url}: unreachable`, 'http')));
-    req.end(payload);
+    if (payload !== null) req.end(payload);
+    else req.end();
   });
 }
 

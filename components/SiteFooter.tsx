@@ -35,8 +35,8 @@ export function SiteFooter() {
           <FooterNav
             label="Developers"
             links={[
-              { href: '/api', label: 'API overview' },
-              { href: '/api', label: 'The contract' },
+              { href: '/api', label: 'Public API' },
+              { href: '/status', label: 'Provider status' },
             ]}
           />
           <FooterNav

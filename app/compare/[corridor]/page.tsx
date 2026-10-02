@@ -12,6 +12,7 @@ import { corridorNote, paymentMethodsFor } from '@/lib/corridorNotes';
 import { providersFor } from '@/lib/live/registry-core';
 import { corridorInsight, corridorSummary } from '@/lib/corridorInsight';
 import { formatBps, formatMoney, formatPaymentMethods } from '@/lib/format';
+import { isLive } from '@/lib/live/configured';
 
 /** One statically generated page per corridor. These are the search asset. */
 export function generateStaticParams() {
@@ -89,7 +90,7 @@ export default async function CorridorPage({ params }: Params) {
           <div className="lg:pt-4">
             <Pill className="mb-6">
               {providersFor(corridor.slug).length} providers tracked ·{' '}
-              {providersFor(corridor.slug).filter((p) => p.integrated).length} with live pricing
+              {providersFor(corridor.slug).filter((p) => isLive(p.slug)).length} with live pricing
             </Pill>
 
             <h1 className="text-display text-ink">
