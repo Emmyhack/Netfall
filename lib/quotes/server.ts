@@ -1,6 +1,7 @@
 import { aggregate } from '../live/aggregate';
 import { LIVE_PROVIDERS } from '../live/registry';
 import type { ProviderProfile, QuoteResponse } from '../types';
+import { isLive } from '../live/configured';
 
 /**
  * The server half of the data seam. The client half (source.ts) is bundled
@@ -25,6 +26,6 @@ export async function listProviders(): Promise<ProviderProfile[]> {
     source: p.source,
     hasCommercialRelationship: p.hasCommercialRelationship,
     routeUrlTemplate: p.routeUrlTemplate,
-    integrated: p.integrated,
+    integrated: isLive(p.slug),
   }));
 }

@@ -13,6 +13,7 @@ import { CORRIDORS } from '@/lib/corridors';
 import { computeCoverage } from '@/lib/coverage';
 import { providersFor } from '@/lib/live/registry-core';
 import { formatBps } from '@/lib/format';
+import { isLive } from '@/lib/live/configured';
 
 const PROMISES = [
   [
@@ -134,7 +135,7 @@ export default async function HomePage() {
                 <div className="mt-12 flex items-baseline justify-between border-t border-rule pt-5">
                   <span className="text-sm text-ink-3">{providersFor(corridor.slug).length} providers</span>
                   <span className="text-sm text-ink-3">
-                    {providersFor(corridor.slug).some((p) => p.integrated)
+                    {providersFor(corridor.slug).some((p) => isLive(p.slug))
                       ? 'live pricing'
                       : 'tracked'}
                   </span>

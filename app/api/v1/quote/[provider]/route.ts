@@ -6,11 +6,21 @@ import { quoteFromProvider } from '@/lib/live/aggregate';
  * to so rows arrive as each venue answers, with each venue's failure
  * isolated to its own request.
  *
- * Responses are not cached at this layer: the amount varies per user, and
- * the underlying market fetches carry their own 30-second windows, which is
- * where the actual rate limiting protection lives.
+ * Browsers never cache it. Vercel's CDN holds an identical request (same
+ * provider, corridor and amount — most visitors keep the default amount)
+ * for a few seconds, so a crowd on one page costs one upstream round. The
+ * quote's own expiresAt is computed at generation, so a CDN-held answer
+ * simply has less life left, and the client renews it on time.
  */
 export const dynamic = 'force-dynamic';
+
+/*
+ * Region is set project-wide in vercel.json (fra1): Vercel's default US
+ * region is geo-blocked by Binance, and Frankfurt is well peered to Lagos,
+ * Accra and Nairobi.
+ */
+
+const CDN_SECONDS = 10;
 
 export async function GET(
   request: Request,
@@ -28,6 +38,9 @@ export async function GET(
   }
 
   return NextResponse.json(outcome, {
-    headers: { 'Cache-Control': 'no-store' },
+    headers: {
+      'Cache-Control': 'no-store',
+      'Vercel-CDN-Cache-Control': `max-age=${CDN_SECONDS}`,
+    },
   });
 }

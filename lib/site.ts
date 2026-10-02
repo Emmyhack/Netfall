@@ -2,13 +2,24 @@
  * One canonical origin. Metadata, the sitemap, robots and structured data all
  * read it, so a deployment change is a single edit.
  *
- * LIVE: set NEXT_PUBLIC_SITE_URL per environment so preview deployments do
- * not advertise the production canonical.
+ * Resolution order: an explicit NEXT_PUBLIC_SITE_URL (set this once a custom
+ * domain is attached), then the production domain Vercel exposes to every
+ * build, then localhost. Previews deliberately canonicalise to production so
+ * search engines credit the real site, and are kept out of the index below.
  */
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://netfall.io').replace(
-  /\/$/,
-  '',
-);
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit) return explicit;
+  const vercelProduction = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProduction) return `https://${vercelProduction}`;
+  return 'http://localhost:3000';
+}
+
+export const SITE_URL = resolveSiteUrl().replace(/\/$/, '');
+
+/** True only on the production deployment (or a self-hosted production build). */
+export const IS_INDEXABLE =
+  process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'production';
 
 export const SITE_NAME = 'Netfall';
 
