@@ -41,7 +41,9 @@ export const CORE_PROVIDERS: readonly CoreProvider[] = [
   {
     slug: 'yellowcard',
     name: 'Yellow Card',
-    integrated: false,
+    // Connector exists; it answers only where credentials are configured.
+    // Server pages count it as live through isLive(), not this flag.
+    integrated: true,
     corridors: ['ngn-usdt', 'ngn-usdc', 'ghs-usdt', 'ghs-usdc', 'kes-usdt', 'kes-usdc'],
   },
   { slug: 'busha', name: 'Busha', integrated: false, corridors: ['ngn-usdt', 'ngn-usdc'] },

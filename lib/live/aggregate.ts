@@ -5,6 +5,7 @@ import type { Quote, QuoteResponse, UnavailableQuote } from '../types';
 import { binanceP2pQuote } from './connectors/binancep2p';
 import { lunoQuote } from './connectors/luno';
 import { quidaxQuote } from './connectors/quidax';
+import { yellowCardQuote } from './connectors/yellowcard';
 import { LIVE_QUOTE_TTL_SECONDS, expiry, type ConnectorResult } from './connectors/types';
 import { liveProvidersFor, type LiveProvider } from './registry';
 
@@ -18,6 +19,7 @@ const CONNECTORS: Record<string, (corridor: NonNullable<ReturnType<typeof getCor
   quidax: quidaxQuote,
   'binance-p2p': binanceP2pQuote,
   luno: lunoQuote,
+  yellowcard: yellowCardQuote,
 };
 
 export async function quoteFromProvider(
