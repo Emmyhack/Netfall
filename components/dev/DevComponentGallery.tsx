@@ -281,7 +281,7 @@ export function DevComponentGallery() {
 
       <DevSection title="CodeSnippet">
         <DevCase label="bash">
-          <CodeSnippet code={'curl https://api.netfall.io/v1/quote \\\n  -d corridor=NGN-USDT'} language="bash" />
+          <CodeSnippet code={'curl "http://localhost:3000/api/v1/quote?corridor=ngn-usdt&amount=500000"'} language="bash" />
         </DevCase>
         <DevCase label="json">
           <CodeSnippet code={'{\n  "landedAmount": "314.73",\n  "confidence": "exact"\n}'} language="json" />

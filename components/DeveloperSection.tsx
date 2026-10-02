@@ -1,35 +1,16 @@
 import { computeCoverage } from '@/lib/coverage';
+import { liveApiSample, SAMPLE_ENDPOINT } from '@/lib/server/apiSample';
 import { CodeSnippet } from './CodeSnippet';
 import { ButtonLink } from './ui/Button';
 import { Section, SectionHeading, type SectionTone } from './ui/Section';
 
-const REQUEST = `curl https://api.netfall.io/v1/quote \\
-  -H "Authorization: Bearer $NETFALL_KEY" \\
-  -d corridor=NGN-USDT \\
-  -d amount=500000`;
-
-const RESPONSE = `{
-  "corridor": "NGN-USDT",
-  "inputAmount": "500000",
-  "dispersionBps": 287,
-  "expiresAt": "2026-09-19T14:22:31Z",
-  "quotes": [
-    {
-      "provider": "yellowcard",
-      "landedAmount": "310.67",
-      "effectiveRate": "0.000621340000",
-      "confidence": "exact",
-      "source": "direct",
-      "settlementEstimateSeconds": 420
-    }
-  ],
-  "unavailable": [
-    { "provider": "moonpay", "reason": "below_minimum" }
-  ]
-}`;
+const REQUEST = `curl "${SAMPLE_ENDPOINT}"`;
 
 export async function DeveloperSection({ tone = 'paper' }: { tone?: SectionTone }) {
-  const coverage = await computeCoverage();
+  const [coverage, sample] = await Promise.all([
+    computeCoverage(),
+    liveApiSample({ quotes: 1, unavailable: 1 }),
+  ]);
 
   return (
     <Section tone={tone} labelledBy="developers-heading">
@@ -38,7 +19,7 @@ export async function DeveloperSection({ tone = 'paper' }: { tone?: SectionTone 
           <SectionHeading
             id="developers-heading"
             title="The same numbers, as an API"
-            standfirst="One call returns every provider in a corridor, ranked by what lands, with the ones that could not quote and why."
+            standfirst="One call returns every provider in a corridor, ranked by what lands, with the ones that could not quote and why. Free, no key."
             size="lg"
           />
 
@@ -64,7 +45,13 @@ export async function DeveloperSection({ tone = 'paper' }: { tone?: SectionTone 
 
         <div className="grid gap-4">
           <CodeSnippet code={REQUEST} language="bash" label="Request" />
-          <CodeSnippet code={RESPONSE} language="json" label="Response" />
+          {sample && (
+            <CodeSnippet
+              code={sample.json}
+              language="json"
+              label={`Real response, ${sample.at.slice(11, 16)} UTC (trimmed)`}
+            />
+          )}
         </div>
       </div>
     </Section>
