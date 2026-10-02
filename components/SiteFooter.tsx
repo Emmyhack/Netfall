@@ -44,6 +44,8 @@ export function SiteFooter() {
             links={[
               { href: '/about', label: 'What we measure' },
               { href: '/how-we-make-money', label: 'How we make money' },
+              { href: '/privacy', label: 'Privacy' },
+              { href: '/terms', label: 'Terms of use' },
             ]}
           />
         </div>
@@ -51,7 +53,8 @@ export function SiteFooter() {
         <p className="mt-20 max-w-content border-t border-rule pt-8 text-sm text-ink-3">
           Netfall never holds funds, never executes transactions and never takes custody. We
           measure what providers offer and hand you off to them. Rates change constantly; a
-          figure is valid only for as long as its countdown shows.
+          figure is valid only for as long as its countdown shows. Nothing here is financial
+          advice.
         </p>
       </div>
     </footer>

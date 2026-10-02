@@ -5,7 +5,14 @@ import { providersFor } from './live/registry-core';
 export interface Coverage {
   corridorCount: number;
   providerCount: number;
-  medianDispersionBps: number;
+  /** Providers that returned a live price in at least one corridor when sampled. */
+  liveProviderCount: number;
+  /**
+   * Median best-to-worst spread across corridors where at least two
+   * providers answered. Null when no corridor had two: a spread over one
+   * price is not zero, it is unmeasurable, and must not be shown as 0.
+   */
+  medianDispersionBps: number | null;
   widestCorridor: { slug: string; from: string; to: string; dispersionBps: number } | null;
 }
 
@@ -13,8 +20,8 @@ export interface Coverage {
  * Coverage figures are measured, not written into the markup. If a corridor is
  * added or a provider drops out, these move on their own.
  *
- * LIVE: the engine exposes the same three numbers over /v1/coverage, computed
- * across the last hour of real quotes rather than one seeded sample.
+ * One live sample per corridor at its default amount, taken when the
+ * calling page regenerates.
  */
 export async function computeCoverage(seed = 'coverage'): Promise<Coverage> {
   const providers = new Set<string>();
@@ -31,6 +38,11 @@ export async function computeCoverage(seed = 'coverage'): Promise<Coverage> {
       response: await sampleCorridor(corridor.slug, corridor.defaultAmount, seed),
     })),
   );
+
+  const live = new Set<string>();
+  for (const { response } of sampled) {
+    for (const quote of response?.quotes ?? []) live.add(quote.provider);
+  }
 
   const measurements = sampled
     .filter(({ response }) => response !== null && response.quotes.length >= 2)
@@ -50,7 +62,8 @@ export async function computeCoverage(seed = 'coverage'): Promise<Coverage> {
   return {
     corridorCount: CORRIDORS.length,
     providerCount: providers.size,
-    medianDispersionBps: median(sorted),
+    liveProviderCount: live.size,
+    medianDispersionBps: sorted.length > 0 ? median(sorted) : null,
     widestCorridor: widest,
   };
 }

@@ -73,7 +73,9 @@ export default async function OpenGraphImage() {
               Every provider, ranked by what arrives
             </div>
             <div style={{ display: 'flex', color: OG.ink3 }}>
-              median spread {formatBps(coverage.medianDispersionBps)}
+              {coverage.medianDispersionBps !== null
+                ? `median spread ${formatBps(coverage.medianDispersionBps)}`
+                : `${coverage.corridorCount} corridors tracked`}
             </div>
           </div>
         </div>

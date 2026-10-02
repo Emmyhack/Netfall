@@ -136,13 +136,12 @@ export default async function CorridorPage({ params }: Params) {
                 : ''}
               .{' '}
               {insight.unavailableCount > 0
-                ? `${insight.unavailableCount} of the ${providersFor(corridor.slug).length} providers could not quote at all when we last measured, which is normal here.`
-                : 'Every provider quoted when we last measured, which is unusual.'}
+                ? `${insight.unavailableCount} of the ${providersFor(corridor.slug).length} providers could not quote when we last measured.`
+                : 'Every provider quoted when we last measured.'}
             </p>
             {insight.fastestSettlement && (
               <p className="max-w-content text-lg text-ink-2">
-                The fastest settlement we saw was {insight.fastestSettlement}. Speed and price pull
-                in opposite directions here: the cheapest route is rarely the quickest.
+                The fastest settlement we saw was {insight.fastestSettlement}.
               </p>
             )}
           </div>

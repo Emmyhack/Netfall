@@ -1,5 +1,7 @@
 import { request as httpsRequest } from 'node:https';
 import { setDefaultResultOrder } from 'node:dns';
+import { fastLookup } from './dns';
+import { isStale, sharedCache } from './shared';
 
 /*
  * Applied here as well as in instrumentation.ts, because instrumentation is
@@ -57,9 +59,17 @@ export async function fetchJsonCached(
   url: string,
   options: { timeoutMs?: number; revalidateSeconds?: number } = {},
 ): Promise<CachedRead> {
+  const revalidateSeconds = options.revalidateSeconds ?? 30;
   try {
-    const data = await fetchJson(url, options);
-    lastGood.set(url, { payload: data, at: Date.now() });
+    const { value: data, ageMs } = await sharedCache(['get', url], revalidateSeconds, () =>
+      requestJsonRaw(url, { timeoutMs: options.timeoutMs ?? 9000 }),
+    );
+    if (isStale(ageMs, revalidateSeconds)) {
+      // The shared cache is serving a value its refresh could not replace.
+      if (ageMs > STALE_MAX_MS) throw new UpstreamError(`${url}: no fresh read for ${Math.round(ageMs / 1000)}s`, 'http');
+      return { data, staleAgeMs: ageMs };
+    }
+    lastGood.set(url, { payload: data, at: Date.now() - ageMs });
     return { data, staleAgeMs: null };
   } catch (error) {
     const held = lastGood.get(url);
@@ -96,30 +106,12 @@ export async function fetchJson(
     return requestJsonRaw(url, { method: 'POST', body, timeoutMs });
   }
 
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'application/json' },
-      signal: AbortSignal.timeout(timeoutMs),
-      next: { revalidate: revalidateSeconds },
-    });
-  } catch (error) {
-    const timedOut = error instanceof Error && error.name === 'TimeoutError';
-    throw new UpstreamError(
-      `${url}: ${timedOut ? 'timed out' : 'unreachable'}`,
-      timedOut ? 'timeout' : 'http',
-    );
-  }
-
-  if (!response.ok) {
-    throw new UpstreamError(`${url}: HTTP ${response.status}`, 'http');
-  }
-
-  try {
-    return await response.json();
-  } catch {
-    throw new UpstreamError(`${url}: response was not JSON`, 'shape');
-  }
+  // GETs share one cross-instance cache window per URL. They go over the
+  // same raw request as POSTs so every outbound connection uses fastLookup
+  // (see dns.ts) — the framework's fetch resolves through the thread pool.
+  // Callers that need to know whether the value is current use
+  // fetchJsonCached, which reports staleness.
+  return (await sharedCache(['get', url], revalidateSeconds, () => requestJsonRaw(url, { timeoutMs }))).value;
 }
 
 /**
@@ -153,6 +145,7 @@ export function requestJsonRaw(
           ...headers,
         },
         timeout: timeoutMs,
+        lookup: fastLookup as never,
       },
       (res) => {
         const chunks: Buffer[] = [];

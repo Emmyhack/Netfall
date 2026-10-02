@@ -8,9 +8,10 @@ import { Section } from '@/components/ui/Section';
  * The route-level error boundary. §11: say what happened and what the reader
  * can do, without apologising or hedging.
  *
- * LIVE: report `error.digest` to the error tracker here. The digest is the
- * only identifier that ties this render to the server-side stack, which is
- * deliberately not sent to the browser.
+ * The digest is reported to /api/v1/client-errors, which logs it beside the
+ * server's own onRequestError line for the same digest (instrumentation.ts):
+ * the only link between this render and the stack, which is deliberately
+ * not sent to the browser.
  */
 export default function RouteError({
   error,
@@ -22,6 +23,16 @@ export default function RouteError({
   useEffect(() => {
     // eslint-disable-next-line no-console
     console.error('Route error', error);
+    // Report the reference, never the visitor's data. sendBeacon survives
+    // the visitor navigating away and never blocks the page.
+    try {
+      navigator.sendBeacon?.(
+        '/api/v1/client-errors',
+        JSON.stringify({ digest: error.digest, message: error.message, path: location.pathname }),
+      );
+    } catch {
+      /* reporting must never cause a second failure */
+    }
   }, [error]);
 
   return (

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { CodeSnippet } from '@/components/CodeSnippet';
+import { CopyButton } from '@/components/CopyButton';
 import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { computeCoverage } from '@/lib/coverage';
@@ -57,12 +58,18 @@ export default async function ApiPage() {
           Getting a comparison
         </h2>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
-          <CodeSnippet code={QUOTE_REQUEST} language="bash" label="Request" />
+          <CodeSnippet
+            code={QUOTE_REQUEST}
+            language="bash"
+            label="Request"
+            action={<CopyButton value={QUOTE_REQUEST} />}
+          />
           {sample ? (
             <CodeSnippet
               code={sample.json}
               language="json"
               label={`Real response, ${sample.at.slice(11, 16)} UTC (trimmed)`}
+              action={<CopyButton value={sample.json} />}
             />
           ) : (
             <p className="rounded-card border border-rule bg-surface p-6 text-ink-2">
@@ -93,7 +100,13 @@ export default async function ApiPage() {
         <h2 id="typed" className="text-3xl text-ink">
           From JavaScript
         </h2>
-        <CodeSnippet className="mt-10" code={TYPES} language="ts" label="compare.ts" />
+        <CodeSnippet
+          className="mt-10"
+          code={TYPES}
+          language="ts"
+          label="compare.ts"
+          action={<CopyButton value={TYPES} />}
+        />
       </Section>
 
       <Section tone="white" labelledBy="guarantees">

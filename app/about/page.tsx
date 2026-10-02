@@ -63,7 +63,7 @@ export default async function AboutPage() {
               ['Exact', 'A live quote for your amount.'],
               [
                 'Estimated',
-                'Modelled from the provider’s recent pricing. Close, but not a commitment.',
+                'From the provider’s public price feed or order book, not a firm quote for your amount. Depth and fees can change what arrives.',
               ],
               [
                 'Not verified',
@@ -106,9 +106,12 @@ export default async function AboutPage() {
           Current coverage
         </h2>
         <p className="mt-5 max-w-content text-lg text-ink-2">
-          {coverage.corridorCount} corridors, {coverage.providerCount} providers, median spread
-          between best and worst of {formatBps(coverage.medianDispersionBps)}. Every corridor has
-          its own page.
+          {coverage.corridorCount} corridors and {coverage.providerCount} providers tracked, of
+          which {coverage.liveProviderCount} answered with a live price on the last check.
+          {coverage.medianDispersionBps !== null
+            ? ` The median spread between best and worst was ${formatBps(coverage.medianDispersionBps)}.`
+            : ' No corridor had two providers answering, so there is no spread to report yet.'}{' '}
+          Every corridor has its own page.
         </p>
         <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {CORRIDORS.map((corridor) => (

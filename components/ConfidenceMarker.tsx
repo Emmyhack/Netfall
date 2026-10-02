@@ -16,7 +16,7 @@ const LEVELS: Readonly<
   estimated: {
     label: 'Estimated',
     explanation:
-      'Modelled from this provider’s recent pricing rather than a live quote. What you receive may differ.',
+      'From this provider’s public price feed, not a firm quote for your amount. Depth and fees can change what you receive.',
     className: 'border-caution bg-caution-soft text-caution',
     approximate: true,
   },
