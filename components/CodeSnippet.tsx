@@ -1,5 +1,3 @@
-import { CopyButton } from './CopyButton';
-
 export type SnippetLanguage = 'bash' | 'json' | 'ts';
 
 /**
@@ -82,11 +80,19 @@ export function CodeSnippet({
   language = 'bash',
   label,
   className,
+  action,
 }: {
   code: string;
   language?: SnippetLanguage;
   label?: string;
   className?: string;
+  /**
+   * Rendered in the chrome bar, typically <CopyButton>. A slot rather than a
+   * built-in so a page that does not offer copying never imports the copy
+   * button's client chunk — the homepage teaser relies on that to stay in
+   * its first-load budget.
+   */
+  action?: React.ReactNode;
 }) {
   return (
     // min-w-0: a grid or flex child sizes to its content by default, which
@@ -98,7 +104,7 @@ export function CodeSnippet({
         <span className="text-xs font-medium" style={{ color: 'var(--code-comment)' }}>
           {label ?? language}
         </span>
-        <CopyButton value={code} />
+        {action}
       </div>
       {/* Focusable: the snippet scrolls sideways, so it has to be reachable
           and scrollable from the keyboard. */}

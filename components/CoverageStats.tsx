@@ -9,8 +9,10 @@ export async function CoverageStats({ tone = 'paper' }: { tone?: SectionTone }) 
 
   const stats = [
     { value: String(coverage.corridorCount), label: 'corridors tracked' },
-    { value: String(coverage.providerCount), label: 'providers compared' },
-    { value: formatBps(coverage.medianDispersionBps), label: 'median spread, best to worst' },
+    { value: String(coverage.providerCount), label: 'providers tracked' },
+    coverage.medianDispersionBps !== null
+      ? { value: formatBps(coverage.medianDispersionBps), label: 'median spread, best to worst' }
+      : { value: String(coverage.liveProviderCount), label: 'answering with live prices right now' },
   ];
 
   return (

@@ -125,12 +125,25 @@ export function ComparisonWidget({ corridorFromPath, mode, heroSlot }: Compariso
                     animate={quotes.status === 'settled'}
                   />
 
-                  <a
-                    href="#results"
-                    className="mt-6 inline-flex text-sm font-medium text-ink underline underline-offset-4"
-                  >
-                    See all {providersFor(corridor.slug).length} providers compared
-                  </a>
+                  <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-ink [&>a]:underline [&>a]:underline-offset-4">
+                    <a href="#results">See all {providersFor(corridor.slug).length} providers compared</a>
+                    {best && (
+                      // The address is read at click time: it carries the live
+                      // corridor and amount, and does not exist during SSR.
+                      <a
+                        href="https://wa.me/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(event) => {
+                          event.currentTarget.href = `https://wa.me/?text=${encodeURIComponent(
+                            `${amountInput} ${corridor.from} gets up to ${formatMoney(best.landedAmount, corridor.to)} right now. Compare: ${location.href}`,
+                          )}`;
+                        }}
+                      >
+                        Share on WhatsApp
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

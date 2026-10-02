@@ -1,7 +1,7 @@
 import { createHash, createHmac } from 'node:crypto';
 import { decimalStringFrom, requestJsonRaw, UpstreamError } from '../http';
 import { grossAtReference, midMarket } from '../midmarket';
-import { sharedCache } from '../shared';
+import { isStale, sharedCache } from '../shared';
 import { divide, round, subtract } from '../../money';
 import type { CorridorMeta, FeeLine, Quote } from '../../types';
 import { liveProvider } from '../registry';
@@ -103,10 +103,11 @@ export async function yellowCardQuote(
   if (!yellowCardConfigured()) return { kind: 'unavailable', reason: 'not_configured' };
 
   try {
-    const [reference, rate] = await Promise.all([
+    const [reference, read] = await Promise.all([
       midMarket(corridor.from, corridor.to),
       sharedCache(['yellowcard', corridor.from], 30, () => fetchRate(corridor.from)),
     ]);
+    const rate = read.value;
 
     const landed = round(divide(amount, rate.buy, 8), 2);
     const gross = round(grossAtReference(amount, reference.fiatPerAsset), 2);
@@ -114,7 +115,8 @@ export async function yellowCardQuote(
       { label: 'At interbank reference rate', amount: gross, currency: corridor.to },
       { label: 'Exchange rate margin', amount: subtract(landed, gross), currency: corridor.to },
     ];
-    const rateIsOld = rate.updatedAt !== null && Date.now() - rate.updatedAt > RATE_STALE_MS;
+    const rateIsOld =
+      isStale(read.ageMs, 30) || (rate.updatedAt !== null && Date.now() - rate.updatedAt > RATE_STALE_MS);
 
     const quote: Quote = {
       provider: provider.slug,

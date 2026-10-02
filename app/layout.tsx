@@ -45,6 +45,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Applies a stored theme before first paint so neither theme flashes. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+        {/* Vercel Web Analytics: cookieless page-view counts, same-origin, and
+            no bytes in the app bundle. On only when NEXT_PUBLIC_VERCEL_ANALYTICS=1
+            and Web Analytics is enabled for the project. */}
+        {process.env.NEXT_PUBLIC_VERCEL_ANALYTICS === '1' && (
+          <script defer src="/_vercel/insights/script.js" />
+        )}
       </head>
       <body className={fontVariables}>
         <a

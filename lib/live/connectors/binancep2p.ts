@@ -1,4 +1,4 @@
-import { sharedCache } from '../shared';
+import { isStale, sharedCache } from '../shared';
 import { decimalStringFrom, fetchJson, numberFrom, UpstreamError } from '../http';
 import { grossAtReference, midMarket } from '../midmarket';
 import { divide, round, subtract } from '../../money';
@@ -68,7 +68,7 @@ async function searchAds(fiat: string, asset: string): Promise<{ ads: Ad[]; stal
   try {
     // Shared across instances for the memo window; the local map below is
     // only the last-good fallback for when Binance stops answering.
-    const ads = await sharedCache(['binance-p2p', key], MEMO_TTL_MS / 1000, async () =>
+    const read = await sharedCache(['binance-p2p', key], MEMO_TTL_MS / 1000, async () =>
       parseAds(
         await fetchJson(SEARCH_URL, {
           method: 'POST',
@@ -84,7 +84,9 @@ async function searchAds(fiat: string, asset: string): Promise<{ ads: Ad[]; stal
         }),
       ),
     );
-    memo.set(key, { at: Date.now(), ads });
+    const ads = read.value;
+    if (isStale(read.ageMs, MEMO_TTL_MS / 1000)) return { ads, stale: true };
+    memo.set(key, { at: Date.now() - read.ageMs, ads });
     return { ads, stale: false };
   } catch (error) {
     // A held advert list within ten minutes beats a blank; the caller

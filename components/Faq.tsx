@@ -10,20 +10,20 @@ export const FAQ_QUESTIONS: readonly { q: string; a: string }[] = [
     a: 'No, and there is nothing here to connect one to. Netfall does not talk to wallets, does not ask for keys and does not deploy contracts.',
   },
   {
-    q: 'How can the ranking be trusted if you earn commission?',
-    a: 'Because the ranking is a sort on one field — the amount that lands — in descending order, with no second input. Providers that pay us nothing outrank providers that do all the time, and every provider we earn from is labelled in the table.',
+    q: 'How can the ranking be trusted?',
+    a: 'Because it is a sort on one field — the amount that lands — in descending order, with no second input. Netfall earns nothing from any provider today. If that ever changes, the ranking stays the same sort, and every provider we earn from is labelled in the table.',
   },
   {
     q: 'Why is a provider marked "estimated"?',
-    a: 'Because we could not get a live quote for your exact amount and had to model the price from that provider’s recent pricing. It is close, but it is not a commitment, so we mark it rather than presenting it as exact.',
+    a: 'Because the figure comes from the provider’s public price feed or order book, not from a firm quote for your amount. Order depth, payment-method fees and network fees can change what actually arrives, so we mark it as an estimate rather than presenting it as exact. A figure marked “Not verified” could not be confirmed as current.',
   },
   {
     q: 'Why do some providers show no price at all?',
-    a: 'Some have no public pricing API and no integration with us yet \u2014 they are listed as exactly that. Others timed out or are unreachable from your region. We list every one with the reason instead of hiding them, because absence is information.',
+    a: 'Some have no public pricing API and no integration with us yet \u2014 they are listed as exactly that. Others did not answer our servers in time. We list every one with the reason instead of hiding them, because absence is information. The status page shows which providers are answering right now.',
   },
   {
     q: 'Why did the prices expire?',
-    a: 'Provider rates move continuously, so a quote is only good for a short window. Rather than leave a stale number on screen we mark it expired and offer a refresh.',
+    a: 'Provider rates move continuously, so a figure is only good for about a minute. When it lapses we fetch fresh prices automatically and strike through the old ones until the new ones arrive, so a stale number is never presented as current.',
   },
   {
     q: 'What happens above the large-amount threshold?',

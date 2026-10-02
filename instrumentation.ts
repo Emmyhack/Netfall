@@ -14,3 +14,29 @@ export async function register(): Promise<void> {
     dns.setDefaultResultOrder('ipv4first');
   }
 }
+
+/**
+ * Every unhandled server error, as one JSON line. Vercel's log view and any
+ * log drain can filter on `"event":"server_error"`; the digest is what the
+ * error page shows the visitor, so a report can be matched to its trace.
+ */
+export function onRequestError(
+  error: unknown,
+  request: { path: string; method: string },
+  context: { routerKind: string; routePath: string; routeType: string },
+): void {
+  const err = error as Error & { digest?: string };
+  // eslint-disable-next-line no-console
+  console.error(
+    JSON.stringify({
+      event: 'server_error',
+      digest: err?.digest ?? null,
+      message: err?.message ?? String(error),
+      method: request.method,
+      path: request.path,
+      route: context.routePath,
+      routeType: context.routeType,
+      stack: err?.stack?.split('\n').slice(0, 6).join('\n') ?? null,
+    }),
+  );
+}

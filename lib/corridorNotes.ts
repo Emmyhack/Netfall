@@ -1,26 +1,27 @@
 import type { CorridorSlug } from './types';
 
 /**
- * Editorial copy and payment methods per corridor, kept out of lib/corridors.ts so it never
- * travels in the client bundle: only the statically generated corridor page
- * renders it.
+ * Editorial copy and payment methods per corridor, kept out of
+ * lib/corridors.ts so it never travels in the client bundle: only the
+ * server-rendered corridor pages use it.
  *
- * LIVE: this becomes real editorial copy per corridor. The structure is what
- * matters for now.
+ * Every sentence here is structural — how payment works and what the
+ * figures do and do not include — not a market claim. Anything measurable
+ * (spread, coverage, history) is measured and shown beside this copy.
  */
 export const CORRIDOR_NOTES: Readonly<Record<CorridorSlug, string>> = {
   'ngn-usdt':
-    'The deepest of the three corridors and the most dispersed. Naira liquidity moves between the official window and the parallel market, and providers price the difference very differently from one another.',
+    'Naira purchases are mostly funded by bank transfer. Each venue prices from its own order book or peer-to-peer market rather than from one official rate, which is why the same naira buys noticeably different amounts of USDT from one provider to the next.',
   'ngn-usdc':
-    'Thinner than the USDT book in Nigeria. Fewer providers quote it, and the ones that do often widen the spread rather than raise the headline fee.',
+    'Fewer naira venues quote USDC than USDT. Where a venue has no direct naira market for USDC, the price is reached through USDT, and that extra conversion is part of what you pay.',
   'ghs-usdt':
-    'Almost entirely mobile money. Momo settlement fees are charged by the network as well as the provider, and only some providers show that cost before you commit.',
+    'Most purchases in Ghana are funded with mobile money. The mobile money operator can charge its own transfer fee on top of the provider’s price; the figures here are the provider’s price only.',
   'ghs-usdc':
-    'A small book. Expect two or three providers to be unable to quote at any given moment, and expect the remaining spread to be wide.',
+    'Fewer providers quote USDC against the cedi than USDT. Where USDC is not quoted directly, it is reached through USDT. Mobile money transfer fees, where they apply, are not included in the figures here.',
   'kes-usdt':
-    'M-Pesa dominates, and its own tariff band applies on top of whatever the provider charges. The tightest of the three corridors, but the tariff makes small amounts disproportionately expensive.',
+    'M-Pesa is the usual way to pay. M-Pesa’s own transaction charges apply on top of the provider’s price and are not included in the figures here.',
   'kes-usdc':
-    'Growing, but still behind USDT on both depth and coverage. Settlement is usually fast; the cost sits in the rate rather than the fee.',
+    'Fewer providers quote USDC against the shilling than USDT. As with USDT, M-Pesa transaction charges are separate from the provider’s price and are not included here.',
 };
 
 /** How people in each corridor commonly pay in. Server-rendered copy only. */

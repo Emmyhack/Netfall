@@ -65,6 +65,6 @@ describe('FeeBreakdown', () => {
         fromCurrency="NGN"
       />,
     );
-    expect(screen.getByText(/Modelled from/)).toBeInTheDocument();
+    expect(screen.getByText(/public price feed/)).toBeInTheDocument();
   });
 });

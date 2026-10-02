@@ -25,6 +25,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/how-we-make-money`, priority: 0.5 },
     { url: `${SITE_URL}/about`, priority: 0.5 },
     { url: `${SITE_URL}/status`, priority: 0.4 },
+    { url: `${SITE_URL}/privacy`, priority: 0.2 },
+    { url: `${SITE_URL}/terms`, priority: 0.2 },
   ].map((entry) => ({ ...entry, lastModified: now, changeFrequency: 'weekly' as const }));
 
   return [...pages, ...corridors];
