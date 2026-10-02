@@ -30,8 +30,26 @@ const SECURITY_HEADERS = [
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
 ];
 
+/*
+ * Whether the alert and enquiry backends are configured, decided at build
+ * time and inlined into the forms. The server re-checks on every request
+ * (lib/server/features.ts); this only decides whether the browser shows a
+ * working form or says plainly that the feature is not on yet. Changing
+ * these variables therefore needs a redeploy.
+ */
+const has = (...names) => names.every((name) => Boolean(process.env[name]));
+const storageReady =
+  has('KV_REST_API_URL', 'KV_REST_API_TOKEN') || has('UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN');
+const emailReady = has('RESEND_API_KEY', 'EMAIL_FROM');
+const alertsReady = storageReady && emailReady && (process.env.ALERTS_TOKEN_SECRET?.length ?? 0) >= 32;
+const enquiriesReady = storageReady && emailReady && has('ENQUIRY_INBOX');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_ALERTS_READY: alertsReady ? '1' : '0',
+    NEXT_PUBLIC_ENQUIRIES_READY: enquiriesReady ? '1' : '0',
+  },
   async headers() {
     if (process.env.NODE_ENV !== 'production') return [];
     return [{ source: '/:path*', headers: SECURITY_HEADERS }];

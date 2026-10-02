@@ -1,0 +1,36 @@
+name: Scheduled tick
+
+# Every 15 minutes: record rate history and provider reliability, and
+# evaluate rate alerts. Runs here rather than as a Vercel Cron job because
+# Vercel's Hobby plan only allows daily cron. GitHub may delay scheduled
+# runs by a few minutes under load; nothing in the tick depends on exact
+# timing.
+#
+# Needs two repository secrets:
+#   NETFALL_URL  the production origin, e.g. https://netfall.vercel.app
+#   CRON_SECRET  the same value as the CRON_SECRET env var on Vercel
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Call the tick endpoint
+        env:
+          NETFALL_URL: ${{ secrets.NETFALL_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$NETFALL_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "NETFALL_URL or CRON_SECRET is not set; skipping."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$NETFALL_URL/api/cron/tick"

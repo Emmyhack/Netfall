@@ -1,7 +1,14 @@
+import { requestJsonRaw } from '../live/http';
+
 /**
  * A minimal Upstash Redis REST client — the store behind rate limiting,
- * alerts, enquiries and price history. Plain fetch, no SDK, so nothing new
- * enters the bundle or the dependency tree.
+ * alerts, enquiries and price history. No SDK, so nothing new enters the
+ * bundle or the dependency tree.
+ *
+ * It deliberately avoids the framework-patched fetch: pages read price
+ * history and provider reliability while rendering, and a no-store fetch
+ * there would silently demote statically generated pages to dynamic (the
+ * same failure that once turned unknown corridors into 200s).
  *
  * Reads the variable names Vercel's Upstash integration injects
  * (KV_REST_API_URL / KV_REST_API_TOKEN) and Upstash's own
@@ -26,15 +33,16 @@ export class RedisUnavailable extends Error {}
 async function call(path: string, body: unknown): Promise<unknown> {
   const creds = credentials();
   if (!creds) throw new RedisUnavailable('redis: not configured');
-  const response = await fetch(`${creds.url}${path}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${creds.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!response.ok) throw new RedisUnavailable(`redis: HTTP ${response.status}`);
-  return response.json();
+  try {
+    return await requestJsonRaw(`${creds.url}${path}`, {
+      method: 'POST',
+      body,
+      headers: { Authorization: `Bearer ${creds.token}` },
+      timeoutMs: 5000,
+    });
+  } catch (error) {
+    throw new RedisUnavailable(error instanceof Error ? error.message : 'redis: request failed');
+  }
 }
 
 /** One command, e.g. redis(['GET', 'key']). Returns the command's result. */

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { CORRIDORS } from '@/lib/corridors';
+import { readReliability, type Reliability } from '@/lib/server/history';
 import { computeStatus, type ProbeOutcome } from '@/lib/status';
 
 export const metadata: Metadata = {
@@ -25,30 +26,29 @@ const REASON: Record<string, string> = {
   no_response: 'No answer',
 };
 
-function Cell({ outcome }: { outcome: ProbeOutcome | undefined }) {
+function Cell({ outcome, week }: { outcome: ProbeOutcome | undefined; week: Reliability | undefined }) {
   if (!outcome) return <span className="text-ink-3">—</span>;
-  if (outcome.ok) {
-    return (
-      <span className="inline-flex items-center gap-2 text-ink">
-        <span aria-hidden="true" className="h-2 w-2 rounded-full bg-best" />
-        Live price
-      </span>
-    );
-  }
-  const notBuilt = outcome.reason === 'not_configured';
+  const notBuilt = !outcome.ok && outcome.reason === 'not_configured';
+  const label = outcome.ok ? 'Live price' : (REASON[outcome.reason] ?? 'No answer');
+  const tone = outcome.ok ? 'text-ink' : notBuilt ? 'text-ink-3' : 'text-caution';
+  const dot = outcome.ok ? 'bg-best' : notBuilt ? 'border border-rule-2' : 'bg-caution';
   return (
-    <span className={`inline-flex items-center gap-2 ${notBuilt ? 'text-ink-3' : 'text-caution'}`}>
-      <span
-        aria-hidden="true"
-        className={`h-2 w-2 rounded-full ${notBuilt ? 'border border-rule-2' : 'bg-caution'}`}
-      />
-      {REASON[outcome.reason] ?? 'No answer'}
-    </span>
+    <>
+      <span className={`inline-flex items-center gap-2 ${tone}`}>
+        <span aria-hidden="true" className={`h-2 w-2 rounded-full ${dot}`} />
+        {label}
+      </span>
+      {week && (
+        <span className="numeric mt-1 block text-xs text-ink-3">
+          Answered {Math.round((week.answered / week.checks) * 100)}% of {week.checks} checks, 7 days
+        </span>
+      )}
+    </>
   );
 }
 
 export default async function StatusPage() {
-  const report = await computeStatus();
+  const [report, reliability] = await Promise.all([computeStatus(), readReliability()]);
   const checked = new Date(report.checkedAt);
   const answering = report.providers.filter((p) =>
     Object.values(p.corridors).some((o) => o.ok),
@@ -98,7 +98,7 @@ export default async function StatusPage() {
                   </th>
                   {CORRIDORS.map((c) => (
                     <td key={c.slug} className="px-5 py-4">
-                      <Cell outcome={p.corridors[c.slug]} />
+                      <Cell outcome={p.corridors[c.slug]} week={reliability.get(p.slug)?.get(c.slug)} />
                     </td>
                   ))}
                 </tr>

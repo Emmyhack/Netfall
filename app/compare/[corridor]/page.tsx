@@ -11,6 +11,8 @@ import { CORRIDORS, getCorridor } from '@/lib/corridors';
 import { corridorNote, paymentMethodsFor } from '@/lib/corridorNotes';
 import { providersFor } from '@/lib/live/registry-core';
 import { corridorInsight, corridorSummary } from '@/lib/corridorInsight';
+import { RateHistory } from '@/components/RateHistory';
+import { readHistory } from '@/lib/server/history';
 import { formatBps, formatMoney, formatPaymentMethods } from '@/lib/format';
 import { isLive } from '@/lib/live/configured';
 
@@ -69,7 +71,10 @@ export default async function CorridorPage({ params }: Params) {
   // so re-enabling dynamic params cannot silently render a broken page.
   if (!corridor) notFound();
 
-  const insight = await corridorInsight(corridor);
+  const [insight, history] = await Promise.all([
+    corridorInsight(corridor),
+    readHistory(corridor.slug),
+  ]);
   const others = CORRIDORS.filter((c) => c.slug !== corridor.slug);
 
   return (
@@ -166,6 +171,12 @@ export default async function CorridorPage({ params }: Params) {
             ))}
           </dl>
         </div>
+
+        {history.length >= 2 && (
+          <div className="mt-12">
+            <RateHistory points={history} corridor={corridor} />
+          </div>
+        )}
 
         <DisclosureNotice variant="block" className="mt-12" />
       </Section>

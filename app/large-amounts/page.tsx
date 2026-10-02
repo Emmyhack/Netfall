@@ -8,7 +8,7 @@ import { formatMoney } from '@/lib/format';
 export const metadata: Metadata = {
   title: 'Large amounts',
   description:
-    'Above a certain size, public stablecoin rates stop describing what you would actually receive. Tell us the shape of the trade and we will take it to desks that quote it.',
+    'Above a certain size, public stablecoin rates stop describing what you would actually receive. Tell us the shape of the trade and a person at Netfall will reply about sourcing a negotiated quote.',
   alternates: { canonical: '/large-amounts' },
 };
 
@@ -63,11 +63,11 @@ export default function LargeAmountsPage() {
         <ul className="mt-10 grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {[
             ['We never hold your money', 'At any point, at any size.'],
-            ['We do not execute the trade', 'The desk you choose does, directly with you.'],
-            ['We take no spread on your order', 'We are paid a referral fee or nothing at all.'],
+            ['We do not execute the trade', 'If a desk can quote your size, you deal with them directly.'],
+            ['We take no spread on your order', 'Today we earn nothing from any provider. If that changes, it will be disclosed.'],
             [
               'We do not sell your enquiry',
-              'It goes to desks that quote the corridor, not to a broker list.',
+              'It goes to the Netfall team and is used only to reply to you. It is never sold or added to a list.',
             ],
           ].map(([title, detail]) => (
             <li key={title} className="border-t border-rule pt-4">
