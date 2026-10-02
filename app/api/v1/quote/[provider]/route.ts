@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { quoteFromProvider } from '@/lib/live/aggregate';
+import { rateLimit, tooManyRequests } from '@/lib/server/ratelimit';
 
 /**
  * One provider, one corridor, one amount — the endpoint the client fans out
@@ -22,10 +23,20 @@ export const dynamic = 'force-dynamic';
 
 const CDN_SECONDS = 10;
 
+/*
+ * Generous on purpose: one open tab makes about four calls a minute, and
+ * mobile carriers in these markets put many users behind one shared IP.
+ * This stops a scripted loop, not a busy office.
+ */
+const LIMIT_PER_MINUTE = 600;
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ provider: string }> },
 ) {
+  const limited = await rateLimit(request, 'fanout', LIMIT_PER_MINUTE, 60);
+  if (!limited.allowed) return tooManyRequests(limited);
+
   const { provider } = await context.params;
   const url = new URL(request.url);
   const corridor = url.searchParams.get('corridor') ?? '';

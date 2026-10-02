@@ -4,6 +4,7 @@ import { ButtonLink, Pill } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import { computeCoverage } from '@/lib/coverage';
 import { CORRIDORS } from '@/lib/corridors';
+import { liveApiSample, SAMPLE_ENDPOINT } from '@/lib/server/apiSample';
 
 /** Live figures refresh on this cadence rather than freezing at build. */
 export const revalidate = 300;
@@ -15,70 +16,38 @@ export const metadata: Metadata = {
   alternates: { canonical: '/api' },
 };
 
-const QUOTE_REQUEST = `curl https://api.netfall.io/v1/quote \\
-  -H "Authorization: Bearer $NETFALL_KEY" \\
-  -d corridor=NGN-USDT \\
-  -d amount=500000`;
 
-const QUOTE_RESPONSE = `{
-  "requestId": "req_8f2a91c",
-  "corridor": "NGN-USDT",
-  "inputAmount": "500000",
-  "generatedAt": "2026-09-19T14:21:01Z",
-  "expiresAt": "2026-09-19T14:22:31Z",
-  "dispersionBps": 287,
-  "quotes": [
-    {
-      "provider": "binance-p2p",
-      "providerName": "Binance P2P",
-      "source": "direct",
-      "landedAmount": "314.73",
-      "effectiveRate": "0.000629460000",
-      "confidence": "exact",
-      "settlementEstimateSeconds": 3600,
-      "successRate30d": 0.903,
-      "hasCommercialRelationship": false,
-      "feeBreakdown": [
-        { "label": "Amount at mid-market rate", "amount": "316.37", "currency": "USDT" },
-        { "label": "Provider rate margin", "amount": "-1.64", "currency": "USDT" }
-      ]
-    }
-  ],
-  "unavailable": [
-    { "provider": "busha", "providerName": "Busha", "reason": "timeout" }
-  ]
-}`;
+const QUOTE_REQUEST = `curl "${SAMPLE_ENDPOINT}"`;
 
-const TYPES = `import type { QuoteResponse } from '@netfall/types';
+const TYPES = `const response = await fetch('${SAMPLE_ENDPOINT}');
+if (!response.ok) throw new Error((await response.json()).message);
 
-const response = await fetch('https://api.netfall.io/v1/quote?corridor=NGN-USDT&amount=500000', {
-  headers: { Authorization: \`Bearer \${process.env.NETFALL_KEY}\` },
-});
-
-const quote: QuoteResponse = await response.json();
+const comparison = await response.json();
 
 // Already sorted by landed amount, descending. Nothing else affects the order.
-const best = quote.quotes[0];
+const best = comparison.quotes[0];
 
 // Monetary values are decimal strings. Never parse them into a number.
-console.log(best.landedAmount, best.confidence);`;
+console.log(best?.landedAmount, best?.confidence);`;
 
 export default async function ApiPage() {
-  const coverage = await computeCoverage();
+  const [coverage, sample] = await Promise.all([computeCoverage(), liveApiSample()]);
 
   return (
     <>
       <section className="border-b border-rule">
         <div className="mx-auto max-w-page px-5 pb-16 pt-12 sm:px-6">
-          <Pill className="mb-6">Not open yet</Pill>
+          <Pill className="mb-6">Free · no key · fair use</Pill>
           <h1 className="text-display text-ink">Netfall API</h1>
           <p className="mt-6 max-w-content text-lg text-ink-2">
             One call returns every provider in a corridor, ranked by how much actually lands, with
             the ones that could not quote and the reason each of them failed. It is the same data
             behind the pages on this site, in the same order, with the same guarantees.
           </p>
-          <p className="mt-6 max-w-content rounded-card border border-caution bg-caution-soft px-5 py-4 text-caution">
-            The API is not open yet. This page describes the contract we are building against.
+          <p className="mt-6 max-w-content text-ink-2">
+            It is open now. Send a GET request; there is no key to apply for. Each address can
+            make 60 requests a minute, and identical requests within a few seconds are answered
+            from cache. Above that, you get a 429 with a Retry-After header.
           </p>
         </div>
       </section>
@@ -89,15 +58,42 @@ export default async function ApiPage() {
         </h2>
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           <CodeSnippet code={QUOTE_REQUEST} language="bash" label="Request" />
-          <CodeSnippet code={QUOTE_RESPONSE} language="json" label="Response" />
+          {sample ? (
+            <CodeSnippet
+              code={sample.json}
+              language="json"
+              label={`Real response, ${sample.at.slice(11, 16)} UTC (trimmed)`}
+            />
+          ) : (
+            <p className="rounded-card border border-rule bg-surface p-6 text-ink-2">
+              No sample right now: the providers did not answer when this page was last
+              generated. The request on the left still works — try it.
+            </p>
+          )}
         </div>
+        <dl className="mt-10 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+          {[
+            ['corridor', `One of ${CORRIDORS.map((c) => c.slug).join(', ')}. Uppercase ids work too.`],
+            [
+              'amount',
+              'A decimal string in the source currency, between the corridor minimum and its large-amount threshold. Both are listed at /api/v1/corridors.',
+            ],
+            ['Errors', 'JSON with error and message: corridor_unsupported, amount_invalid, below_minimum, above_public_range, rate_limited.'],
+            ['Also available', '/api/v1/corridors for what is accepted, /api/v1/status for which providers are answering.'],
+          ].map(([term, detail]) => (
+            <div key={term} className="border-t border-rule pt-4">
+              <dt className="numeric text-sm text-ink">{term}</dt>
+              <dd className="mt-2 text-ink-2">{detail}</dd>
+            </div>
+          ))}
+        </dl>
       </Section>
 
       <Section tone="paper" labelledBy="typed">
         <h2 id="typed" className="text-3xl text-ink">
-          In TypeScript
+          From JavaScript
         </h2>
-        <CodeSnippet className="mt-10" code={TYPES} language="ts" label="quote.ts" />
+        <CodeSnippet className="mt-10" code={TYPES} language="ts" label="compare.ts" />
       </Section>
 
       <Section tone="white" labelledBy="guarantees">
