@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { formatMoney } from '@/lib/format';
-import { newId, saveEnquiry } from '@/lib/storage';
 import type { AlertChannel, CorridorMeta, LargeAmountEnquiry } from '@/lib/types';
 import { Field, Select, SubmitButton, TextArea, TextInput } from './forms';
 import { buttonClass } from './ui/Button';
@@ -16,6 +15,9 @@ export interface HighTicketInterceptorProps {
 type Frequency = LargeAmountEnquiry['frequency'];
 type Window = LargeAmountEnquiry['settlementWindow'];
 type Entity = LargeAmountEnquiry['entityType'];
+
+/** Inlined at build from the server configuration (next.config.mjs). */
+const ENQUIRIES_READY = process.env.NEXT_PUBLIC_ENQUIRIES_READY === '1';
 
 const FREQUENCIES: readonly { value: Frequency; label: string }[] = [
   { value: 'one_off', label: 'Once' },
@@ -37,7 +39,8 @@ const WINDOWS: readonly { value: Window; label: string }[] = [
  *
  * This is a revenue-critical surface, not a courtesy message, and it gets the
  * same care as the table: it says plainly why the comparison stopped, what
- * happens next, and exactly what leaves the device.
+ * happens next, and exactly who receives the enquiry: a person at Netfall,
+ * by email (lib/server/enquiries.ts).
  */
 export function HighTicketInterceptor({ corridor, amount, className }: HighTicketInterceptorProps) {
   const [frequency, setFrequency] = useState<Frequency>('one_off');
@@ -47,7 +50,9 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
   const [destination, setDestination] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState<LargeAmountEnquiry | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [submitted, setSubmitted] = useState<{ reference: string; frequency: Frequency; window: Window } | null>(null);
 
   if (submitted) {
     return (
@@ -55,29 +60,29 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
         className={['rounded-card border border-best bg-best-soft p-8', className ?? ''].join(' ')}
         aria-live="polite"
       >
-        <h2 className="text-3xl text-ink">Enquiry recorded</h2>
+        <h2 className="text-3xl text-ink">Enquiry sent</h2>
         <p className="mt-2 max-w-content text-base text-ink-2">
-          We have your request to move {formatMoney(submitted.amount, corridor.from, { decimals: 0 })}{' '}
-          into {corridor.to}, {frequencyLabel(submitted.frequency)}, settling{' '}
-          {windowLabel(submitted.settlementWindow).toLowerCase()}.
+          We have your request to move {formatMoney(amount, corridor.from, { decimals: 0 })} into{' '}
+          {corridor.to}, {frequencyLabel(submitted.frequency)}, settling{' '}
+          {windowLabel(submitted.window).toLowerCase()}.
         </p>
         <p className="mt-3 max-w-content text-sm text-ink-2">
-          In this build nothing is sent anywhere. The enquiry is stored in this browser only, so
-          you can see exactly what would be transmitted. No desk has been contacted and no quote
-          has been requested.
+          A person at Netfall reads every enquiry and will reply{' '}
+          {channel === 'email' ? 'by email' : 'on WhatsApp'}. Your reference is{' '}
+          <span className="numeric text-ink">{submitted.reference}</span>.
         </p>
         <button
           type="button"
           onClick={() => setSubmitted(null)}
           className={buttonClass('secondary', 'md', 'mt-6')}
         >
-          Edit the enquiry
+          Send another
         </button>
       </section>
     );
   }
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     const trimmed = destination.trim();
@@ -93,24 +98,36 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
       setError('Enter a number with its country code, for example +234 802 000 0000.');
       return;
     }
-
-    const enquiry: LargeAmountEnquiry = {
-      id: newId('enq'),
-      corridor: corridor.slug,
-      amount,
-      frequency,
-      settlementWindow,
-      entityType,
-      contactChannel: channel,
-      contactDestination: trimmed,
-      notes: notes.trim(),
-      createdAt: new Date().toISOString(),
-    };
-
-    // LIVE: POST /v1/enquiries, then route to the OTC desk queue.
-    saveEnquiry(enquiry);
     setError(null);
-    setSubmitted(enquiry);
+    setSendError(null);
+    setSending(true);
+
+    try {
+      const response = await fetch('/api/v1/enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          corridor: corridor.slug,
+          amount,
+          frequency,
+          settlementWindow,
+          entityType,
+          contactChannel: channel,
+          contactDestination: trimmed,
+          notes: notes.trim(),
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as { id?: string; message?: string } | null;
+      if (response.ok && payload?.id) {
+        setSubmitted({ reference: payload.id, frequency, window: settlementWindow });
+      } else {
+        setSendError(payload?.message ?? 'That did not go through. Try again.');
+      }
+    } catch {
+      setSendError('You appear to be offline. Try again when you are connected.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -126,9 +143,9 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
           what you would actually receive. Showing them would be dishonest.
         </p>
         <p className="mt-2 max-w-content text-base text-ink-2">
-          At this size the price is negotiated. Tell us the shape of the trade and we will put it
-          to desks that quote it, then send you what they come back with. We still do not touch
-          the money and we still rank on what lands.
+          At this size the price is negotiated. Tell us the shape of the trade and a person at
+          Netfall will reply about sourcing quotes for it. We never touch the money: if a desk can
+          quote this size, you deal with them directly.
         </p>
         <p className="mt-2 max-w-content text-sm text-ink-3">
           On {formatMoney(amount, corridor.from, { decimals: 0 })}, the gap between venues is
@@ -209,7 +226,7 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
         <Field
           label={channel === 'email' ? 'Email address' : 'WhatsApp number'}
           error={error}
-          hint="Stored in this browser only. Nothing is sent in this build."
+          hint="Sent to the Netfall team with this enquiry, and used only to reply to it."
         >
           {({ id, describedBy, invalid }) => (
             <TextInput
@@ -237,8 +254,18 @@ export function HighTicketInterceptor({ corridor, amount, className }: HighTicke
           </Field>
         </div>
 
-        <div className="sm:col-span-2">
-          <SubmitButton>Send the enquiry</SubmitButton>
+        <div className="space-y-3 sm:col-span-2">
+          {!ENQUIRIES_READY && (
+            <p className="rounded-card border border-caution bg-caution-soft px-5 py-4 text-sm text-caution">
+              Large-amount enquiries are not open yet, so this form cannot be sent.
+            </p>
+          )}
+          <SubmitButton disabled={!ENQUIRIES_READY || sending}>
+            {sending ? 'Sending…' : 'Send the enquiry'}
+          </SubmitButton>
+          <p aria-live="polite" className="text-sm text-caution">
+            {sendError ?? ''}
+          </p>
         </div>
       </form>
     </section>

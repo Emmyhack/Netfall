@@ -1,4 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const raw = vi.hoisted(() => ({ requestJsonRaw: vi.fn() }));
+vi.mock('../live/http', () => raw);
+
 import { clientIp, rateLimit } from './ratelimit';
 import { amountFromParam, corridorFromParam, isApiError } from './publicApi';
 import { getCorridor } from '../corridors';
@@ -17,7 +21,7 @@ afterEach(() => {
     if (saved[k] === undefined) delete process.env[k];
     else process.env[k] = saved[k];
   }
-  vi.unstubAllGlobals();
+  raw.requestJsonRaw.mockReset();
 });
 
 const req = (ip = '203.0.113.7') => new Request('https://x.test/api', { headers: { 'x-forwarded-for': `${ip}, 10.0.0.1` } });
@@ -28,17 +32,15 @@ describe('rate limiting', () => {
   });
 
   it('allows everything when no store is configured', async () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
     expect((await rateLimit(req(), 'b', 1, 60)).allowed).toBe(true);
-    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(raw.requestJsonRaw).not.toHaveBeenCalled();
   });
 
   it('blocks once the window count passes the limit', async () => {
     process.env.KV_REST_API_URL = 'https://redis.test';
     process.env.KV_REST_API_TOKEN = 't';
     let count = 0;
-    vi.stubGlobal('fetch', vi.fn(async () => Response.json([{ result: ++count }, { result: 1 }])));
+    raw.requestJsonRaw.mockImplementation(async () => [{ result: ++count }, { result: 1 }]);
     expect((await rateLimit(req(), 'b', 2, 60)).allowed).toBe(true);
     expect((await rateLimit(req(), 'b', 2, 60)).allowed).toBe(true);
     const third = await rateLimit(req(), 'b', 2, 60);
@@ -49,7 +51,7 @@ describe('rate limiting', () => {
   it('fails open when the store errors, so an outage never blocks visitors', async () => {
     process.env.KV_REST_API_URL = 'https://redis.test';
     process.env.KV_REST_API_TOKEN = 't';
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('down', { status: 503 })));
+    raw.requestJsonRaw.mockRejectedValue(new Error('HTTP 503'));
     expect((await rateLimit(req(), 'b', 1, 60)).allowed).toBe(true);
   });
 });
